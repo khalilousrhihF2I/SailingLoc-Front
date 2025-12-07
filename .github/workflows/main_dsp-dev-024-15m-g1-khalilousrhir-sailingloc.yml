@@ -8,10 +8,13 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -29,11 +32,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vite-dist
-          path: dist   # le build généré par Vite
+          path: dist        # <-- le build Vite
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
+
     permissions:
       id-token: write
       contents: read
@@ -42,7 +46,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: vite-dist
-          path: .
+          path: dist        # <-- extrait DANS "dist"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -56,5 +60,7 @@ jobs:
         with:
           app-name: dsp-dev-024-15M-G1-KhalilOusrhir-SailingLoc
           slot-name: Production
-          package: dist    
+          package: dist         # <-- existe maintenant 
+
+
 
