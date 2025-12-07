@@ -63,7 +63,7 @@ export const apiConfig: ApiConfiguration = {
   defaultMode: 'api',
   
   // URL de l'API .NET 8 (configurée via variable d'environnement)
-  apiBaseUrl: getEnvVar('VITE_API_BASE_URL', 'https://localhost:61802/api/v1'),
+  apiBaseUrl: getEnvVar('VITE_API_BASE_URL', 'https://dsp-dev-024-15m-g1-sailingloc-api-gfh9hrc8eehta0df.italynorth-01.azurewebsites.net/api/v1'),
   
   // Configuration par service
   // Vous pouvez activer l'API service par service au fur et à mesure du développement
@@ -113,3 +113,4 @@ export function logApiOperation(service: string, operation: string, data?: any):
     console.log(`[${mode.toUpperCase()}] ${service}.${operation}`, data || '');
   }
 }
+
