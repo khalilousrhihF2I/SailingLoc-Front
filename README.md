@@ -27,7 +27,7 @@ Si vous avez besoin de modifier ces valeurs, vous pouvez créer un fichier `.env
 npm run dev
 ```
 
-L'application sera accessible sur `http://localhost:5173`
+L'application sera accessible sur `http://localhost:5173` OU SUR 'https://dsp-dev-024-15m-g1-khalilousrhir-sailingloc-fyf5apdhfwg8dkfn.italynorth-01.azurewebsites.net/'
 
 ### Scripts disponibles
 
