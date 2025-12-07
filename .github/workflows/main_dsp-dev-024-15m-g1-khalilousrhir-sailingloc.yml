@@ -34,6 +34,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - uses: actions/download-artifact@v4
@@ -54,3 +57,4 @@ jobs:
           app-name: dsp-dev-024-15M-G1-KhalilOusrhir-SailingLoc
           slot-name: Production
           package: dist    
+
