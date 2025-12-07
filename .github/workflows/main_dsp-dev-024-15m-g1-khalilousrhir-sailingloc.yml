@@ -2,7 +2,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - dsp-dev-024-15M-G1-KhalilOusrhir
+name: Build and deploy Node.js app to Azure Web App - dsp-dev-024-15M-G1-KhalilOusrhir-SailingLoc
 
 on:
   push:
@@ -65,3 +65,4 @@ jobs:
           package: .
 
           
+
