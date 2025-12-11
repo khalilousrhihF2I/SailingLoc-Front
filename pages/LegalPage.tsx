@@ -35,7 +35,7 @@ export default function LegalPage({ navigate }: Props) {
                     <section className="mb-4">
                         <h3 className="text-lg font-medium">Contact</h3>
                         <p className="mt-2 text-sm text-gray-700">
-                            Pour toute question relative à ce projet, veuillez contacter l'auteur via la page "Nous contacter".
+                            Pour toute question relative à ce projet, veuillez contacter l'auteur via la page Nous contacter.
                         </p>
                     </section>
 
@@ -51,3 +51,4 @@ export default function LegalPage({ navigate }: Props) {
         </main>
     );
 }
+
