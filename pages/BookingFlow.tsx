@@ -164,13 +164,25 @@ export function BookingFlow({
           return;
         }
 
-        // Try to rehydrate the current user immediately
-        try {
-          const u = await authService.getCurrentUser();
-          if (u) setCurrentUser(u);
-        } catch (e) {
-          // ignore
+        // Registration successful - user is now logged in automatically
+        // The register method now auto-logs in the user if tokens weren't returned
+        // Set the current user state
+        if (resp.user && resp.user.id) {
+          setCurrentUser(resp.user);
+        } else {
+          // If still no user info, try to fetch it
+          try {
+            const u = await authService.getCurrentUser();
+            if (u) {
+              setCurrentUser(u);
+            }
+          } catch (e) {
+            // ignore
+          }
         }
+
+        // Notify parent component that user is now logged in
+        if (onAccountCreated) onAccountCreated();
       } catch (e) {
         setAccountError('Erreur réseau lors de la création du compte');
         return;
@@ -178,7 +190,6 @@ export function BookingFlow({
     }
 
     // Passer à l'étape de paiement
-    if (onAccountCreated) onAccountCreated();
     setStep(2);
   };
 
@@ -189,14 +200,29 @@ export function BookingFlow({
       let u = currentUser;
       if (!u) {
         u = await authService.getCurrentUser();
-        setCurrentUser(u);
+        if (u) {
+          setCurrentUser(u);
+        }
       }
       console.log('Current user at payment success:', u);
 
-      if (!u) {
-        setAccountError('Veuillez vous connecter avant de finaliser la réservation');
-        setStep(1);
-        return;
+      if (!u || !u.id) {
+        // If still no user after trying to fetch, check if we have account data from registration
+        // This can happen if the registration just completed but state hasn't synced
+        if (!isLoggedIn && accountData.email && accountData.firstName) {
+          // Try one more time to get the user after a brief delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+          u = await authService.getCurrentUser();
+          if (u) {
+            setCurrentUser(u);
+          }
+        }
+        
+        if (!u || !u.id) {
+          setAccountError('Veuillez vous connecter avant de finaliser la réservation');
+          setStep(1);
+          return;
+        }
       }
 
       // Prevent owners from creating bookings
@@ -214,9 +240,11 @@ export function BookingFlow({
         DailyPrice: boat.price,
         ServiceFee: serviceFee,
         RenterId: u.id, // backend expects GUID — ensure your auth user id format matches
-        RenterName: `${u.firstName} ${u.lastName}` || `${accountData.firstName} ${accountData.lastName}`,
+        RenterName: ((u as any).firstName || accountData.firstName) && ((u as any).lastName || accountData.lastName)
+          ? `${(u as any).firstName || accountData.firstName} ${(u as any).lastName || accountData.lastName}`
+          : u.name || `${accountData.firstName} ${accountData.lastName}`,
         RenterEmail: u.email || accountData.email,
-        RenterPhone: accountData.phoneNumber || undefined,
+        RenterPhone: (u as any).phoneNumber || accountData.phoneNumber || undefined,
       };
 
       const booking = await bookingService.createBooking(createDto as any);
@@ -521,3 +549,4 @@ export function BookingFlow({
     </div>
   );
 }
+
