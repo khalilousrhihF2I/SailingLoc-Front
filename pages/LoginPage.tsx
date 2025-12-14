@@ -55,9 +55,9 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
   const fillDemoAccount = (type: 'renter' | 'owner' | 'admin') => {
     setError('');
     const accounts = {
-      renter: { email: 'renter@example.com', password: 'demo123' },
-      owner: { email: 'owner@example.com', password: 'demo123' },
-      admin: { email: 'admin@sailingloc.com', password: 'demo123' }
+      renter: { email: 'renter@example.com', password: 'Demo123@@' },
+      owner: { email: 'owner@example.com', password: 'Demo123@@' },
+      admin: { email: 'admin@sailingloc.com', password: 'Demo123@@' }
     };
     setEmail(accounts[type].email);
     setPassword(accounts[type].password);
@@ -173,7 +173,7 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
               </button>
             </div>
             <p className="mt-3 text-xs text-ocean-600">
-              Mot de passe : <b>demo123</b>
+              Mot de passe : <b>Demo123@@</b>
             </p>
           </div>
         </Card>
@@ -181,3 +181,4 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
     </div>
   );
 }
+
