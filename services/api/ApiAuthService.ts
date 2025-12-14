@@ -123,21 +123,57 @@ export class ApiAuthService implements IAuthService {
         };
       }
 
-      // Otherwise try to GET /auth/me after storing tokens
-      try {
-        const meResp = await apiClient.get<any>(`${this.endpoint}/me`);
-        if (!meResp.error && meResp.data) {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(meResp.data));
-          return {
-            success: true,
-            message: resp.message || 'Registered',
-            user: meResp.data,
-            token: accessToken,
-            tokens: resp.tokens || (accessToken ? { accessToken, refreshToken, expiresAt: resp.expiresAt } : undefined),
-          };
+      // If no token was returned, auto-login the user using the credentials they just registered with
+      if (!accessToken) {
+        try {
+          logApiOperation('auth', 'auto-login after register', { email: data.email });
+          const loginResp = await apiClient.post<any>(`${this.endpoint}/login`, { 
+            email: data.email, 
+            password: data.password 
+          });
+          
+          if (!loginResp.error && loginResp.data) {
+            const loginData = loginResp.data;
+            const loginAccessToken = loginData.accessToken || loginData.tokens?.accessToken || loginData.token;
+            const loginRefreshToken = loginData.refreshToken || loginData.tokens?.refreshToken || '';
+            
+            if (loginAccessToken) {
+              localStorage.setItem(this.TOKEN_KEY, loginAccessToken);
+              if (loginRefreshToken) localStorage.setItem(this.TOKEN_KEY + '_refresh', loginRefreshToken);
+            }
+            
+            if (loginData.user) {
+              localStorage.setItem(this.USER_KEY, JSON.stringify(loginData.user));
+              return {
+                success: true,
+                message: resp.message || 'Registered',
+                user: loginData.user,
+                token: loginAccessToken,
+                tokens: loginData.tokens || (loginAccessToken ? { accessToken: loginAccessToken, refreshToken: loginRefreshToken, expiresAt: loginData.expiresAt } : undefined),
+              };
+            }
+            
+            // Try to GET /auth/me with the new token
+            try {
+              const meResp = await apiClient.get<any>(`${this.endpoint}/me`);
+              if (!meResp.error && meResp.data) {
+                localStorage.setItem(this.USER_KEY, JSON.stringify(meResp.data));
+                return {
+                  success: true,
+                  message: resp.message || 'Registered',
+                  user: meResp.data,
+                  token: loginAccessToken,
+                  tokens: loginData.tokens || (loginAccessToken ? { accessToken: loginAccessToken, refreshToken: loginRefreshToken, expiresAt: loginData.expiresAt } : undefined),
+                };
+              }
+            } catch (e) {
+              // ignore
+            }
+          }
+        } catch (e) {
+          logApiOperation('auth', 'auto-login failed after register', { email: data.email });
+          // Fall through to return success with minimal info
         }
-      } catch (e) {
-        // ignore
       }
 
       return {
@@ -301,3 +337,4 @@ export class ApiAuthService implements IAuthService {
     return { success: true, message: resp.data?.message };
   }
 }
+
