@@ -29,6 +29,7 @@ export const PAGE_TO_PATH: Record<Page, string> = {
   'legal': '/mentions-legales',
   'create-listing': '/proprietaire/nouveau-bateau',
   'edit-listing': '/proprietaire/modifier-bateau/:boatId',
+  'how-it-works': '/comment-ca-marche',
   '404': '/404',
 };
 

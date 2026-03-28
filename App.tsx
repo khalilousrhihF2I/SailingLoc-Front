@@ -28,6 +28,7 @@ import { authService } from './services/ServiceFactory';
 import { CreateBoatListingPage } from './pages/CreateBoatListingPage';
 import { EditBoatListingPage } from './pages/EditBoatListingPage';
 import { AboutPage } from './pages/AboutPage';
+import { HowItWorksPage } from './pages/HowItWorksPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import LegalPage from './pages/LegalPage';
 import { getUserRole } from './utils/getUserRole';
@@ -47,15 +48,6 @@ function AppLayout() {
         <Outlet />
       </main>
       <Footer onNavigate={navigate} />
-    </div>
-  );
-}
-
-// ── Full-screen layout (no header/footer) ──
-function FullScreenLayout() {
-  return (
-    <div className="min-h-screen">
-      <Outlet />
     </div>
   );
 }
@@ -278,6 +270,20 @@ function AboutRoute() {
   );
 }
 
+function HowItWorksRoute() {
+  const navigate = useAppNavigate();
+  return (
+    <>
+      <SEOHead
+        title="Comment ça marche"
+        description="Découvrez comment louer ou proposer un bateau sur SailingLoc en quelques étapes simples."
+        canonical="https://sailingloc-front.azurestaticapps.net/comment-ca-marche"
+      />
+      <HowItWorksPage onNavigate={navigate} />
+    </>
+  );
+}
+
 function FAQRoute() {
   const navigate = useAppNavigate();
   return (
@@ -383,13 +389,6 @@ export default function App() {
   return (
     <ModalProvider>
       <Routes>
-        {/* Full-screen pages (no header/footer) */}
-        <Route element={<FullScreenLayout />}>
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboardRoute /></ProtectedRoute>} />
-          <Route path="/admin/utilisateurs" element={<ProtectedRoute allowedRoles={['admin']}><AdminUserRoute /></ProtectedRoute>} />
-          <Route path="/admin/utilisateurs/:userId" element={<ProtectedRoute allowedRoles={['admin']}><AdminUserDetailRoute /></ProtectedRoute>} />
-        </Route>
-
         {/* Standard pages with header/footer */}
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomeRoute />} />
@@ -400,6 +399,7 @@ export default function App() {
           <Route path="/mot-de-passe-oublie" element={<ForgotPasswordRoute />} />
           <Route path="/destinations" element={<DestinationsRoute />} />
           <Route path="/a-propos" element={<AboutRoute />} />
+          <Route path="/comment-ca-marche" element={<HowItWorksRoute />} />
           <Route path="/faq" element={<FAQRoute />} />
           <Route path="/contact" element={<ContactRoute />} />
           <Route path="/conditions-generales" element={<TermsRoute />} />
@@ -407,6 +407,9 @@ export default function App() {
           <Route path="/mentions-legales" element={<LegalRoute />} />
 
           {/* Protected routes */}
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboardRoute /></ProtectedRoute>} />
+          <Route path="/admin/utilisateurs" element={<ProtectedRoute allowedRoles={['admin']}><AdminUserRoute /></ProtectedRoute>} />
+          <Route path="/admin/utilisateurs/:userId" element={<ProtectedRoute allowedRoles={['admin']}><AdminUserDetailRoute /></ProtectedRoute>} />
           <Route path="/tableau-de-bord/locataire" element={<ProtectedRoute allowedRoles={['renter']}><RenterDashboardRoute /></ProtectedRoute>} />
           <Route path="/tableau-de-bord/proprietaire" element={<ProtectedRoute allowedRoles={['owner']}><OwnerDashboardRoute /></ProtectedRoute>} />
           <Route path="/reservation/:boatId" element={<ProtectedRoute><BookingFlowRoute /></ProtectedRoute>} />

@@ -385,10 +385,10 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
   // État de chargement
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <Card className=" w-full p-8 text-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-10 text-center rounded-xl">
           <Loader className="animate-spin text-ocean-600 mx-auto mb-4" size={48} />
-          <h2 className="text-gray-900 mb-2">Chargement...</h2>
+          <h2 className="text-gray-900 font-semibold mb-2">Chargement...</h2>
           <p className="text-gray-600">
             Récupération des informations du bateau
           </p>
@@ -400,14 +400,14 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
   // Erreur de chargement
   if (error && !boat) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4" >
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4" >
 
         <div className="w-full max-w-md">
-          <Card className="w-full p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Card className="w-full p-10 text-center rounded-xl">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-red-600 text-2xl">⚠</span>
             </div>
-            <h2 className="text-gray-900 mb-2">Erreur</h2>
+            <h2 className="text-gray-900 font-semibold mb-2">Erreur</h2>
             <p className="text-gray-600 mb-4">{error}</p>
             <Button onClick={() => onNavigate('owner-dashboard')}>
               Retour au tableau de bord
@@ -421,12 +421,12 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
   // Succès
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <Card className=" w-full p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} className="text-green-600" />
+      <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-gray-50 flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-10 text-center animate-fade-in-up rounded-xl">
+          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <CheckCircle size={48} className="text-green-600" />
           </div>
-          <h2 className="text-gray-900 mb-2">Modifications enregistrées !</h2>
+          <h2 className="text-gray-900 font-semibold text-xl mb-2">Modifications enregistrées !</h2>
           <p className="text-gray-600 mb-4">
             Votre annonce "{basicInfo.name}" a été mise à jour avec succès.
           </p>
@@ -439,18 +439,18 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-ocean-50 via-white to-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => {
               if (step === 1) {
                 if (isAdmin) {
                   try {
                     onNavigate('admin-dashboard', { tab: 'boats' });
                   } catch {
-                    // fallback to URL navigation if SPA navigate fails
                     window.location.href = '/admin-dashboard';
                   }
                 } else {
@@ -460,12 +460,12 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
                 handleBack();
               }
             }}
-            className="flex items-center gap-2 text-ocean-600 hover:text-ocean-700 mb-4"
+            className="mb-4"
           >
             <ArrowLeft size={20} />
             <span>Retour</span>
-          </button>
-          <h1 className="text-gray-900">Modifier l'annonce : {boat?.name}</h1>
+          </Button>
+          <h1 className="text-gray-900 font-bold text-2xl">Modifier l'annonce : {boat?.name}</h1>
           <p className="text-gray-600">
             Mettez à jour les informations de votre bateau
           </p>
@@ -479,7 +479,7 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
         />
 
         {/* Form */}
-        <Card className="p-6 md:p-8">
+        <Card className="p-6 md:p-8 rounded-xl">
           {error && boat && (
             <Alert type="error">
               {error}
@@ -754,9 +754,9 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
               </div>
 
               {details.image && (
-                <div className="p-4 bg-ocean-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-2">Photo principale :</p>
-                  <div className="w-full h-48 rounded-lg overflow-hidden">
+                <div className="p-4 bg-ocean-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Photo principale</p>
+                  <div className="w-full h-48 rounded-xl overflow-hidden">
                     <img src={details.image} alt="Photo principale" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=800'; }} />
                   </div>
                 </div>
@@ -808,8 +808,8 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
           {step === 6 && (
             <div className="space-y-6">
               <div className="mt-3">
-                <CheckCircle className="text-ocean-600 mb-2" size={32} />
-                <h3 className="text-gray-900 mb-2">Récapitulatif des modifications</h3>
+                <CheckCircle className="text-green-600 mb-2" size={32} />
+                <h3 className="text-gray-900 font-semibold mb-2">Récapitulatif des modifications</h3>
                 <p className="text-gray-600">
                   Vérifiez les informations avant d'enregistrer
                 </p>
@@ -817,9 +817,9 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
 
               {/* Photo principale */}
               {details.image && (
-                <div className="p-4 bg-ocean-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-2">Photo principale :</p>
-                  <div className="w-full h-64 rounded-lg overflow-hidden">
+                <div className="p-4 bg-ocean-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Photo principale</p>
+                  <div className="w-full h-64 rounded-xl overflow-hidden">
                     <img
                       src={details.image}
                       alt="Photo principale"
@@ -833,8 +833,8 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
               )}
 
               {/* Récapitulatif */}
-              <div className="p-6 bg-gray-50 rounded-lg space-y-4">
-                <h4 className="text-gray-900 mb-3">Informations du bateau</h4>
+              <div className="p-6 bg-gray-50 rounded-xl space-y-4">
+                <h4 className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">Informations du bateau</h4>
 
                 <div className="space-y-3">
                   <div className="flex justify-between border-b border-gray-200 pb-2">
@@ -869,7 +869,7 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="text-gray-600">Prix :</span>
-                    <span className="text-gray-900">{details.price}€/jour</span>
+                    <span className="text-gray-900 font-bold">{details.price}€/jour</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Équipements :</span>
@@ -879,15 +879,15 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
               </div>
 
               {/* Description */}
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-700 mb-2">Description :</p>
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Description</p>
                 <p className="text-gray-600 text-sm">{details.description}</p>
               </div>
 
               {/* Équipements */}
               {equipment.length > 0 && (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-3">Équipements ({equipment.length}) :</p>
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">Équipements ({equipment.length})</p>
                   <div className="flex flex-wrap gap-2">
                     {equipment.map((item) => (
                       <span
@@ -935,11 +935,11 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
 
               {/* Photos supplémentaires (thumbnails) */}
               {photos && photos.length > 0 && (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-3">Photos supplémentaires :</p>
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">Photos supplémentaires</p>
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                     {photos.map((url, i) => (
-                      <div key={i} className="w-full h-20 rounded overflow-hidden border">
+                      <div key={i} className="w-full h-20 rounded-xl overflow-hidden border">
                         <img
                           src={url}
                           alt={`Photo supplémentaire ${i + 1}`}

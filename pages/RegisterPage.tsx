@@ -1,5 +1,5 @@
-import  { useState } from 'react';
-import { Mail, Lock, User, Phone, Ship } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, Lock, User, Phone, Ship, MapPin, ChevronRight, ChevronLeft, Check, Anchor } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -12,7 +12,57 @@ interface RegisterPageProps {
   onNavigate: (page: Page) => void;
 }
 
+/** Map backend error messages to user-friendly French messages */
+function formatApiError(msg: string | undefined): string {
+  if (!msg) return 'Erreur lors de l\'inscription.';
+
+  // Try to find JSON blob inside the message
+  try {
+    const jsonStart = msg.indexOf('{');
+    if (jsonStart !== -1) {
+      const jsonPart = msg.substring(jsonStart);
+      const body = JSON.parse(jsonPart);
+      if (body) {
+        const title = body.title || body.message || '';
+        if (body.errors && typeof body.errors === 'object') {
+          const msgs: string[] = [];
+          for (const key of Object.keys(body.errors)) {
+            const arr = body.errors[key];
+            if (Array.isArray(arr)) msgs.push(...arr.map((s: any) => String(s)));
+          }
+          if (msgs.length) return msgs.join(' — ');
+        }
+        if (title) return String(title);
+      }
+    }
+  } catch {
+    // parse failed - fallthrough
+  }
+
+  const lower = msg.toLowerCase();
+  if (lower.includes('duplicate') || lower.includes('already exists') || lower.includes('email is already'))
+    return 'Cette adresse email est déjà utilisée. Veuillez vous connecter ou utiliser une autre adresse.';
+  if (lower.includes('password') && lower.includes('weak'))
+    return 'Le mot de passe est trop faible. Utilisez au moins 8 caractères avec des lettres et des chiffres.';
+  if (lower.includes('network') || lower.includes('fetch'))
+    return 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.';
+
+  // Strip HTTP prefixes
+  const cleaned = msg.replace(/^HTTP \d+: - /, '').replace(/^HTTP \d+: /, '');
+  // If contains French chars, pass through
+  if (/[àâäéèêëïîôùûüç]/i.test(cleaned)) return cleaned;
+  return 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.';
+}
+
+const STEPS = [
+  { id: 1, title: 'Type de compte', description: 'Choisissez votre profil' },
+  { id: 2, title: 'Informations', description: 'Vos coordonnées' },
+  { id: 3, title: 'Adresse', description: 'Votre localisation' },
+  { id: 4, title: 'Sécurité', description: 'Mot de passe & validation' },
+];
+
 export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
+  const [currentStep, setCurrentStep] = useState(1);
   const [userType, setUserType] = useState<'renter' | 'owner'>('renter');
   const [formData, setFormData] = useState({
     firstName: '',
@@ -31,27 +81,61 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
     }
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Per-step validation
+  const validateStep = (step: number): string[] => {
+    const errors: string[] = [];
+    if (step === 2) {
+      if (!formData.firstName.trim()) errors.push('Le prénom est requis');
+      if (!formData.lastName.trim()) errors.push('Le nom est requis');
+      if (!formData.email.trim()) errors.push('L\'email est requis');
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.push('Adresse email invalide');
+      if (!formData.phoneNumber.trim()) errors.push('Le numéro de téléphone est requis');
+    }
+    if (step === 3) {
+      if (!formData.address.street.trim()) errors.push('La rue est requise');
+      if (!formData.address.city.trim()) errors.push('La ville est requise');
+      if (!formData.address.postalCode.trim()) errors.push('Le code postal est requis');
+      if (!formData.address.country.trim()) errors.push('Le pays est requis');
+    }
+    if (step === 4) {
+      if (!formData.password) errors.push('Le mot de passe est requis');
+      else if (formData.password.length < 8) errors.push('Le mot de passe doit contenir au moins 8 caractères');
+      if (formData.password !== formData.confirmPassword) errors.push('Les mots de passe ne correspondent pas');
+      if (!acceptedTerms) errors.push('Vous devez accepter les conditions générales');
+    }
+    return errors;
+  };
+
+  const nextStep = () => {
+    const errs = validateStep(currentStep);
+    if (errs.length > 0) {
+      setError(errs[0]);
+      return;
+    }
+    setError('');
+    setCurrentStep(s => Math.min(s + 1, 4));
+  };
+
+  const prevStep = () => {
+    setError('');
+    setCurrentStep(s => Math.max(s - 1, 1));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errs = validateStep(4);
+    if (errs.length > 0) {
+      setError(errs[0]);
+      return;
+    }
+
     setError('');
+    setLoading(true);
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      setError('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères');
-      return;
-    }
-
-    // Call the auth service to register
     const registerData = {
       email: formData.email,
       password: formData.password,
@@ -70,303 +154,395 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
       avatarBase64: undefined,
     };
 
-    const formatApiError = (msg: string | undefined): string => {
-      if (!msg) return 'Erreur lors de l\'inscription';
-
-      // Try to find JSON blob inside the message
-      try {
-        const jsonStart = msg.indexOf('{');
-        if (jsonStart !== -1) {
-          const jsonPart = msg.substring(jsonStart);
-          const body = JSON.parse(jsonPart);
-          // ProblemDetails with errors
-          if (body) {
-            const title = body.title || body.message || 'Validation failed';
-            if (body.errors && typeof body.errors === 'object') {
-              const msgs: string[] = [];
-              for (const key of Object.keys(body.errors)) {
-                const arr = body.errors[key];
-                if (Array.isArray(arr)) msgs.push(...arr.map((s: any) => String(s)));
-              }
-              if (msgs.length) return `${title}: ${msgs.join(' — ')}`;
-            }
-            if (body.title) return String(body.title);
-            return JSON.stringify(body);
-          }
-        }
-      } catch (e) {
-        // parse failed - fallthrough
-      }
-
-      // Strip common prefixes like 'HTTP 400: - '
-      const cleaned = msg.replace(/^HTTP \d+: - /, '').replace(/^HTTP \d+: /, '');
-      return cleaned;
-    };
-
     try {
       const resp = await authService.register(registerData);
 
       if (!resp.success) {
-        // Prefer structured errors array if provided
         if ((resp as any).errors && Array.isArray((resp as any).errors) && (resp as any).errors.length) {
           const arr = (resp as any).errors as Array<{ code?: string; description?: string }>;
           setError(arr.map(a => a.description).join(' — '));
           return;
         }
-
-        // Otherwise format the message (may contain ProblemDetails JSON)
         setError(formatApiError(resp.message));
         return;
       }
 
-      // On success, ensure the user is authenticated before proceeding
+      // On success, ensure user is authenticated
       try {
         let authResp = resp as any;
-
-        // If register didn't return user/tokens, attempt to login with provided credentials
         if (!authResp.user && !(authResp.token || authResp.tokens)) {
           try {
             authResp = await authService.login({ email: formData.email, password: formData.password });
-          } catch (e) {
-            // ignore here, we'll try getCurrentUser as fallback
+          } catch {
+            // ignore, try getCurrentUser
           }
         }
-
-        // If still not authenticated, try to rehydrate current user
         if (!authResp.success || !authResp.user) {
           const me = await authService.getCurrentUser();
           if (!me) {
-            setError('Impossible de s\'authentifier après l\'inscription. Veuillez vous connecter.');
+            setError('Compte créé ! Veuillez vous connecter.');
             return;
           }
         }
-
-        // Now authenticated (or rehydrated) — proceed
         onRegister(userType);
-      } catch (e) {
-        setError('Erreur lors de l\'authentification après l\'inscription');
+      } catch {
+        setError('Compte créé avec succès. Veuillez vous connecter.');
       }
     } catch (err: any) {
-      const msg = err?.message ? formatApiError(err.message) : 'Erreur réseau lors de l\'inscription';
-      setError(msg);
+      setError(formatApiError(err?.message));
+    } finally {
+      setLoading(false);
     }
   };
 
+  const updateField = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateAddress = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, address: { ...prev.address, [field]: value } }));
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-ocean-50 via-white to-turquoise-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-2xl mx-auto animate-fade-in-up">
+        {/* Header */}
         <div className="text-center mb-8">
-          <img src="/logos/logo-icon-only.PNG" alt="SailingLoc" className="w-16 h-16 mx-auto mb-4 rounded-xl object-contain" />
+          <div className="w-16 h-16 bg-ocean-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <Anchor className="text-white" size={28} />
+          </div>
           <h2 className="text-gray-900 mb-2">Créer un compte</h2>
-          <p className="text-gray-600">Rejoignez la communauté SailingLoc</p>
+          <p className="text-gray-500">Rejoignez la communauté SailingLoc</p>
         </div>
 
-        <Card className="p-8">
-          {/* User Type Selection */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <button
-              type="button"
-              onClick={() => setUserType('renter')}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                userType === 'renter'
-                  ? 'border-ocean-600 bg-ocean-50'
-                  : 'border-gray-200 hover:border-ocean-300'
-              }`}
-            >
-              <div className="text-center">
-                <User className="mx-auto mb-2 text-ocean-600" size={32} />
-                <div className="text-gray-900">Locataire</div>
-                <div className="text-sm text-gray-600 mt-1">Je veux louer un bateau</div>
+        {/* Stepper */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between max-w-lg mx-auto">
+            {STEPS.map((step, idx) => (
+              <div key={step.id} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                      currentStep > step.id
+                        ? 'bg-green-500 text-white shadow-md'
+                        : currentStep === step.id
+                          ? 'bg-ocean-600 text-white shadow-lg ring-4 ring-ocean-100'
+                          : 'bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {currentStep > step.id ? <Check size={18} /> : step.id}
+                  </div>
+                  <div className="mt-2 text-center hidden sm:block">
+                    <div className={`text-xs font-medium ${currentStep >= step.id ? 'text-ocean-600' : 'text-gray-400'}`}>
+                      {step.title}
+                    </div>
+                  </div>
+                </div>
+                {idx < STEPS.length - 1 && (
+                  <div className={`w-12 sm:w-20 h-0.5 mx-1 sm:mx-2 transition-colors duration-300 ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'}`} />
+                )}
               </div>
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => setUserType('owner')}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                userType === 'owner'
-                  ? 'border-ocean-600 bg-ocean-50'
-                  : 'border-gray-200 hover:border-ocean-300'
-              }`}
-            >
-              <div className="text-center">
-                <Ship className="mx-auto mb-2 text-ocean-600" size={32} />
-                <div className="text-gray-900">Propriétaire</div>
-                <div className="text-sm text-gray-600 mt-1">Je veux louer mon bateau</div>
-              </div>
-            </button>
+            ))}
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <Alert type="error">{error}</Alert>
-            )}
+        <Card className="p-8 shadow-lg border-0">
+          {error && (
+            <Alert type="error" onClose={() => setError('')}>{error}</Alert>
+          )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                type="text"
-                label="Prénom *"
-                placeholder="Jean"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                icon={<User size={20} />}
-                autoComplete="given-name"
-                required
-              />
+          {/* Step 1: User Type */}
+          {currentStep === 1 && (
+            <div className="animate-fade-in">
+              <h3 className="text-gray-900 mb-2 text-center">Quel type de compte souhaitez-vous ?</h3>
+              <p className="text-gray-500 text-center mb-8">Vous pourrez modifier cette information plus tard.</p>
 
-              <Input
-                type="text"
-                label="Nom *"
-                placeholder="Dupont"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                icon={<User size={20} />}
-                autoComplete="family-name"
-                required
-              />
-            </div>
-
-            <Input
-              type="email"
-              label="Adresse email *"
-              placeholder="votre@email.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              icon={<Mail size={20} />}
-              autoComplete="email"
-              required
-            />
-
-            <Input
-              type="tel"
-              label="Téléphone  *"
-              placeholder="+33 6 12 34 56 78"
-              value={formData.phoneNumber}
-              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-              icon={<Phone size={20} />}
-              autoComplete="tel"
-              required
-            />
-
-            <Input
-              type="date"
-              label="Date de naissance *"
-              placeholder="Date de naissance"
-              value={formData.birthDate}
-              onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-              icon={<User size={20} />}
-              autoComplete="bday"
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                type="text"
-                label="Rue et numéro *"
-                placeholder="12 Rue de la Mer"
-                value={formData.address.street}
-                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
-                autoComplete="street-address"
-              />
-
-              <Input
-                type="text"
-                label="Ville *"
-                placeholder="Bordeaux"
-                value={formData.address.city}
-                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })}
-                autoComplete="address-level2"
-              />
-
-              <Input
-                type="text"
-                label="Province   *"
-                placeholder="ile-de-France"
-                value={formData.address.state}
-                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, state: e.target.value } })}
-                autoComplete="address-level1"
-              />
-
-              <Input
-                type="text"
-                label="Code postal *"
-                placeholder="33000"
-                value={formData.address.postalCode}
-                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, postalCode: e.target.value } })}
-                autoComplete="postal-code"
-              />
-
-              <Input
-                type="text"
-                label="Pays *"
-                placeholder="France"
-                value={formData.address.country}
-                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, country: e.target.value } })}
-                autoComplete="country-name"
-              />
-            </div>
-
-            <Input
-              type="password"
-              label="Mot de passe *"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              icon={<Lock size={20} />}
-              autoComplete="new-password"
-              required
-              error={formData.password && formData.password.length < 8 ? 'Le mot de passe doit contenir au moins 8 caractères' : ''}
-            />
-
-            <Input
-              type="password"
-              label="Confirmer le mot de passe *"
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              icon={<Lock size={20} />}
-              autoComplete="new-password"
-              required
-              error={formData.confirmPassword && formData.confirmPassword !== formData.password ? 'Les mots de passe ne correspondent pas' : ''}
-            />
-
-            <div className="flex items-start gap-2">
-              <input 
-                type="checkbox" 
-                id="terms"
-                required
-                className="mt-1 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500"
-              />
-              <label htmlFor="terms" className="text-sm text-gray-700">
-                J'accepte les{' '}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => onNavigate('terms')}
-                  className="text-ocean-600 hover:text-ocean-700"
+                  onClick={() => setUserType('renter')}
+                  className={`p-6 rounded-2xl border-2 transition-all duration-200 text-left ${
+                    userType === 'renter'
+                      ? 'border-ocean-600 bg-ocean-50 shadow-md'
+                      : 'border-gray-200 hover:border-ocean-300 hover:bg-gray-50'
+                  }`}
                 >
-                  conditions générales
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${userType === 'renter' ? 'bg-ocean-100' : 'bg-gray-100'}`}>
+                    <User className={userType === 'renter' ? 'text-ocean-600' : 'text-gray-500'} size={24} />
+                  </div>
+                  <div className="text-gray-900 font-semibold mb-1">Locataire</div>
+                  <div className="text-sm text-gray-500">Je souhaite louer un bateau pour mes sorties en mer</div>
                 </button>
-                {' '}et la{' '}
+
                 <button
                   type="button"
-                  onClick={() => onNavigate('privacy')}
-                  className="text-ocean-600 hover:text-ocean-700"
+                  onClick={() => setUserType('owner')}
+                  className={`p-6 rounded-2xl border-2 transition-all duration-200 text-left ${
+                    userType === 'owner'
+                      ? 'border-ocean-600 bg-ocean-50 shadow-md'
+                      : 'border-gray-200 hover:border-ocean-300 hover:bg-gray-50'
+                  }`}
                 >
-                  politique de confidentialité
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${userType === 'owner' ? 'bg-ocean-100' : 'bg-gray-100'}`}>
+                    <Ship className={userType === 'owner' ? 'text-ocean-600' : 'text-gray-500'} size={24} />
+                  </div>
+                  <div className="text-gray-900 font-semibold mb-1">Propriétaire</div>
+                  <div className="text-sm text-gray-500">Je souhaite proposer mon bateau à la location</div>
                 </button>
-              </label>
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                <Button variant="primary" onClick={nextStep}>
+                  Continuer <ChevronRight size={18} />
+                </Button>
+              </div>
             </div>
+          )}
 
-            <Button type="submit" variant="primary" size="lg" fullWidth>
-              Créer mon compte
-            </Button>
-          </form>
+          {/* Step 2: Personal Information */}
+          {currentStep === 2 && (
+            <div className="animate-fade-in">
+              <h3 className="text-gray-900 mb-1 text-center">Informations personnelles</h3>
+              <p className="text-gray-500 text-center mb-6">Renseignez vos coordonnées</p>
 
-          <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-            <p className="text-gray-600">
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    type="text"
+                    label="Prénom *"
+                    placeholder="Jean"
+                    value={formData.firstName}
+                    onChange={(e) => updateField('firstName', e.target.value)}
+                    icon={<User size={20} />}
+                    autoComplete="given-name"
+                    required
+                  />
+                  <Input
+                    type="text"
+                    label="Nom *"
+                    placeholder="Dupont"
+                    value={formData.lastName}
+                    onChange={(e) => updateField('lastName', e.target.value)}
+                    icon={<User size={20} />}
+                    autoComplete="family-name"
+                    required
+                  />
+                </div>
+
+                <Input
+                  type="email"
+                  label="Adresse email *"
+                  placeholder="votre@email.com"
+                  value={formData.email}
+                  onChange={(e) => updateField('email', e.target.value)}
+                  icon={<Mail size={20} />}
+                  autoComplete="email"
+                  required
+                  error={touched.email && formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'Adresse email invalide' : ''}
+                  onBlur={() => setTouched(t => ({ ...t, email: true }))}
+                />
+
+                <Input
+                  type="tel"
+                  label="Téléphone *"
+                  placeholder="+33 6 12 34 56 78"
+                  value={formData.phoneNumber}
+                  onChange={(e) => updateField('phoneNumber', e.target.value)}
+                  icon={<Phone size={20} />}
+                  autoComplete="tel"
+                  required
+                />
+
+                <Input
+                  type="date"
+                  label="Date de naissance"
+                  value={formData.birthDate}
+                  onChange={(e) => updateField('birthDate', e.target.value)}
+                  autoComplete="bday"
+                />
+              </div>
+
+              <div className="mt-8 flex justify-between">
+                <Button variant="ghost" onClick={prevStep}>
+                  <ChevronLeft size={18} /> Retour
+                </Button>
+                <Button variant="primary" onClick={nextStep}>
+                  Continuer <ChevronRight size={18} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Address */}
+          {currentStep === 3 && (
+            <div className="animate-fade-in">
+              <h3 className="text-gray-900 mb-1 text-center">Adresse</h3>
+              <p className="text-gray-500 text-center mb-6">Votre adresse de résidence</p>
+
+              <div className="space-y-5">
+                <Input
+                  type="text"
+                  label="Rue et numéro *"
+                  placeholder="12 Rue de la Mer"
+                  value={formData.address.street}
+                  onChange={(e) => updateAddress('street', e.target.value)}
+                  icon={<MapPin size={20} />}
+                  autoComplete="street-address"
+                  required
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    type="text"
+                    label="Ville *"
+                    placeholder="La Rochelle"
+                    value={formData.address.city}
+                    onChange={(e) => updateAddress('city', e.target.value)}
+                    autoComplete="address-level2"
+                    required
+                  />
+                  <Input
+                    type="text"
+                    label="Région"
+                    placeholder="Nouvelle-Aquitaine"
+                    value={formData.address.state}
+                    onChange={(e) => updateAddress('state', e.target.value)}
+                    autoComplete="address-level1"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    type="text"
+                    label="Code postal *"
+                    placeholder="17000"
+                    value={formData.address.postalCode}
+                    onChange={(e) => updateAddress('postalCode', e.target.value)}
+                    autoComplete="postal-code"
+                    required
+                  />
+                  <Input
+                    type="text"
+                    label="Pays *"
+                    placeholder="France"
+                    value={formData.address.country}
+                    onChange={(e) => updateAddress('country', e.target.value)}
+                    autoComplete="country-name"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-between">
+                <Button variant="ghost" onClick={prevStep}>
+                  <ChevronLeft size={18} /> Retour
+                </Button>
+                <Button variant="primary" onClick={nextStep}>
+                  Continuer <ChevronRight size={18} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Security */}
+          {currentStep === 4 && (
+            <form onSubmit={handleSubmit} className="animate-fade-in">
+              <h3 className="text-gray-900 mb-1 text-center">Sécurité</h3>
+              <p className="text-gray-500 text-center mb-6">Choisissez un mot de passe sécurisé</p>
+
+              <div className="space-y-5">
+                <Input
+                  type="password"
+                  label="Mot de passe *"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => updateField('password', e.target.value)}
+                  icon={<Lock size={20} />}
+                  autoComplete="new-password"
+                  required
+                  error={formData.password && formData.password.length < 8 ? 'Le mot de passe doit contenir au moins 8 caractères' : ''}
+                />
+
+                {/* Password strength indicator */}
+                {formData.password && (
+                  <div className="space-y-2">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4].map((level) => {
+                        const strength = formData.password.length >= 12 ? 4 : formData.password.length >= 10 ? 3 : formData.password.length >= 8 ? 2 : 1;
+                        const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-400'];
+                        return (
+                          <div
+                            key={level}
+                            className={`h-1.5 flex-1 rounded-full transition-colors ${level <= strength ? colors[strength - 1] : 'bg-gray-200'}`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {formData.password.length < 8 ? 'Trop court' : formData.password.length < 10 ? 'Acceptable' : formData.password.length < 12 ? 'Bon' : 'Excellent'}
+                    </p>
+                  </div>
+                )}
+
+                <Input
+                  type="password"
+                  label="Confirmer le mot de passe *"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={(e) => updateField('confirmPassword', e.target.value)}
+                  icon={<Lock size={20} />}
+                  autoComplete="new-password"
+                  required
+                  error={formData.confirmPassword && formData.confirmPassword !== formData.password ? 'Les mots de passe ne correspondent pas' : ''}
+                />
+
+                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500"
+                  />
+                  <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
+                    J'accepte les{' '}
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('terms')}
+                      className="text-ocean-600 hover:text-ocean-700 font-medium"
+                    >
+                      conditions générales
+                    </button>
+                    {' '}et la{' '}
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('privacy')}
+                      className="text-ocean-600 hover:text-ocean-700 font-medium"
+                    >
+                      politique de confidentialité
+                    </button>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-between">
+                <Button variant="ghost" type="button" onClick={prevStep}>
+                  <ChevronLeft size={18} /> Retour
+                </Button>
+                <Button type="submit" variant="primary" disabled={loading}>
+                  {loading ? 'Création en cours...' : 'Créer mon compte'}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* Login link */}
+          <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+            <p className="text-gray-500">
               Déjà un compte ?{' '}
               <button
                 onClick={() => onNavigate('login')}
-                className="text-ocean-600 hover:text-ocean-700"
+                className="text-ocean-600 hover:text-ocean-700 font-semibold transition-colors"
               >
                 Se connecter
               </button>

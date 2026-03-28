@@ -5,6 +5,10 @@ import { handleLogout } from '../utils/handleLogout';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { Input } from '../components/ui/Input';
+import { DashboardShell, StatCard } from '../components/ui/DashboardShell';
+import { TablePagination } from '../components/ui/TablePagination';
 import { renterDashboardService, bookingService, userDocumentService } from '../services/ServiceFactory';
 import { Page } from '../types/navigation';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -35,6 +39,8 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
   const [docUploading, setDocUploading] = useState(false);
   const [newDocType, setNewDocType] = useState<string>('Pièce d\'identité');
   const [newDocFile, setNewDocFile] = useState<File | null>(null);
+  const [bookingsPage, setBookingsPage] = useState(1);
+  const RENTER_PAGE_SIZE = 10;
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,137 +116,53 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
   const { showAlert, showConfirm } = useModal();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-gray-900 mb-2">Mon espace locataire</h2>
-          <p className="text-gray-600">Gérez vos réservations et votre profil</p>
+    <DashboardShell
+      title="Mon espace locataire"
+      subtitle="Gérez vos réservations et votre profil"
+      navItems={[
+        { id: 'bookings', label: 'Mes réservations', icon: <Ship size={20} /> },
+        { id: 'profile', label: 'Mon profil', icon: <User size={20} /> },
+        { id: 'documents', label: 'Mes documents', icon: <FileText size={20} /> },
+        { id: 'payments', label: 'Paiements', icon: <CreditCard size={20} /> },
+        { id: 'logout', label: 'Déconnexion', icon: <LogOut size={20} />, variant: 'danger' as const },
+      ]}
+      activeTab={activeTab}
+      onTabChange={(id) => {
+        if (id === 'logout') { handleLogout(onLogout); return; }
+        setActiveTab(id as any);
+      }}
+      sidebarHeader={
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 bg-ocean-600 rounded-full flex items-center justify-center text-white text-xl mb-3 overflow-hidden">
+            {profileForm.avatar ? (
+              <img src={profileForm.avatar} alt={`${profileForm.firstName || ''} ${profileForm.lastName || ''}`} className="w-full h-full object-cover" />
+            ) : (
+              <span className="uppercase">{((profileForm.firstName?.[0] ?? '') + (profileForm.lastName?.[0] ?? '') || 'U').toUpperCase()}</span>
+            )}
+          </div>
+          <div className="text-gray-900 font-medium text-sm">{(profileForm.firstName || profileForm.lastName) ? `${profileForm.firstName ?? ''} ${profileForm.lastName ?? ''}`.trim() : 'Utilisateur'}</div>
+          <div className="text-xs text-gray-500">{profileForm.email ?? ''}</div>
         </div>
+      }
+    >
+      {/* Loading / Error states */}
+      {loading && <Card className="p-6 text-center text-gray-500 mb-3">Chargement des données...</Card>}
+      {error && <Alert type="error">Erreur : {error}</Alert>}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <Card className="p-6">
-              <div className="flex flex-col items-center mb-6 pb-6 border-b border-gray-200">
-                <div className="w-20 h-20 bg-ocean-600 rounded-full flex items-center justify-center text-white text-2xl mb-3 overflow-hidden">
-                  {profileForm.avatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profileForm.avatar} alt={`${profileForm.firstName || ''} ${profileForm.lastName || ''}`} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-2xl">{((profileForm.firstName?.[0] + ' ' + profileForm.lastName?.[0]) || 'U').toUpperCase()}</div>
-                  )}
-                </div>
-                <div className="text-center">
-                  <div className="text-gray-900">{(profileForm.firstName || profileForm.lastName) ? `${profileForm.firstName ?? ''} ${profileForm.lastName ?? ''}`.trim() : 'Utilisateur'}</div>
-                  <div className="text-sm text-gray-600">{profileForm.email ?? ''}</div>
-                </div>
-              </div>
-
-              <nav className="space-y-2">
-                <button
-                  onClick={() => setActiveTab('bookings')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'bookings'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Ship size={20} />
-                  <span>Mes réservations</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'profile'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <User size={20} />
-                  <span>Mon profil</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('documents')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'documents'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <FileText size={20} />
-                  <span>Mes documents</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('payments')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'payments'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <CreditCard size={20} />
-                  <span>Paiements</span>
-                </button>
-                <button
-                  onClick={() => handleLogout(onLogout)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <LogOut size={20} />
-                  <span>Déconnexion</span>
-                </button>
-              </nav>
-            </Card>
-          </aside>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {loading && <Card className="p-6 mb-3">Chargement...</Card>}
-            {error && <Card className="p-6 bg-red-50 border-red-200  mb-3"><div className="text-red-800">Erreur: {error}</div></Card>}
-            {activeTab === 'bookings' && (
+      {activeTab === 'bookings' && (
               <div className="space-y-6">
                 {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-ocean-100 rounded-lg flex items-center justify-center">
-                        <Clock className="text-ocean-600" size={24} />
-                      </div>
-                      <div>
-                        <div className="text-2xl text-gray-900">{pendingBookings.length}</div>
-                        <div className="text-sm text-gray-600">En attente</div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="text-green-600" size={24} />
-                      </div>
-                      <div>
-                        <div className="text-2xl text-gray-900">{confirmedBookings.length}</div>
-                        <div className="text-sm text-gray-600">Confirmées</div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Calendar className="text-gray-600" size={24} />
-                      </div>
-                      <div>
-                        <div className="text-2xl text-gray-900">{completedBookings.length}</div>
-                        <div className="text-sm text-gray-600">Terminées</div>
-                      </div>
-                    </div>
-                  </Card>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <StatCard label="En attente" value={pendingBookings.length} icon={<Clock className="text-ocean-600" size={22} />} iconBg="bg-ocean-100" />
+                  <StatCard label="Confirmées" value={confirmedBookings.length} icon={<CheckCircle className="text-green-600" size={22} />} iconBg="bg-green-100" />
+                  <StatCard label="Terminées" value={completedBookings.length} icon={<Calendar className="text-gray-600" size={22} />} iconBg="bg-gray-100" />
                 </div>
 
                 {/* Bookings List */}
                 <Card className="p-6">
                   <h3 className="text-gray-900 mb-6">Mes réservations</h3>
                   <div className="space-y-4 mt-2">
-                    {bookings.map((booking) => (
+                    {bookings.slice((bookingsPage - 1) * RENTER_PAGE_SIZE, bookingsPage * RENTER_PAGE_SIZE).map((booking) => (
                       <div
                         key={booking.id}
                         className="border border-gray-200 rounded-lg hover:border-ocean-300 transition-colors overflow-hidden"
@@ -392,6 +314,12 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
                       </div>
                     ))}
                   </div>
+                  <TablePagination
+                    currentPage={bookingsPage}
+                    totalPages={Math.ceil(bookings.length / RENTER_PAGE_SIZE)}
+                    onPageChange={setBookingsPage}
+                    totalItems={bookings.length}
+                  />
                 </Card>
               </div>
             )}
@@ -405,90 +333,18 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
 
                     <div className="md:col-span-2">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Prénom</label>
-                          <input
-                            type="text"
-                            value={profileForm.firstName}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, firstName: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Nom</label>
-                          <input
-                            type="text"
-                            value={profileForm.lastName}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, lastName: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Email</label>
-                          <input
-                            type="email"
-                            value={profileForm.email}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, email: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Téléphone</label>
-                          <input
-                            type="tel"
-                            value={profileForm.phone ?? ''}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, phone: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
+                        <Input label="Prénom" type="text" value={profileForm.firstName} onChange={(e) => setProfileForm((p:any) => ({ ...p, firstName: e.target.value }))} />
+                        <Input label="Nom" type="text" value={profileForm.lastName} onChange={(e) => setProfileForm((p:any) => ({ ...p, lastName: e.target.value }))} />
+                        <Input label="Email" type="email" value={profileForm.email} onChange={(e) => setProfileForm((p:any) => ({ ...p, email: e.target.value }))} />
+                        <Input label="Téléphone" type="tel" value={profileForm.phone ?? ''} onChange={(e) => setProfileForm((p:any) => ({ ...p, phone: e.target.value }))} />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Rue</label>
-                          <input
-                            type="text"
-                            value={profileForm.street}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, street: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Ville</label>
-                          <input
-                            type="text"
-                            value={profileForm.city}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, city: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">État / Région</label>
-                          <input
-                            type="text"
-                            value={profileForm.state}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, state: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Code postal</label>
-                          <input
-                            type="text"
-                            value={profileForm.postalCode}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, postalCode: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Pays</label>
-                          <input
-                            type="text"
-                            value={profileForm.country}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, country: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
+                        <Input label="Rue" type="text" value={profileForm.street} onChange={(e) => setProfileForm((p:any) => ({ ...p, street: e.target.value }))} />
+                        <Input label="Ville" type="text" value={profileForm.city} onChange={(e) => setProfileForm((p:any) => ({ ...p, city: e.target.value }))} />
+                        <Input label="État / Région" type="text" value={profileForm.state} onChange={(e) => setProfileForm((p:any) => ({ ...p, state: e.target.value }))} />
+                        <Input label="Code postal" type="text" value={profileForm.postalCode} onChange={(e) => setProfileForm((p:any) => ({ ...p, postalCode: e.target.value }))} />
+                        <Input label="Pays" type="text" value={profileForm.country} onChange={(e) => setProfileForm((p:any) => ({ ...p, country: e.target.value }))} />
                       </div>
 
                       <div className="mt-6 flex items-center gap-3">
@@ -646,9 +502,6 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
                 </div>
               </Card>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+    </DashboardShell>
   );
 }

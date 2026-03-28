@@ -277,36 +277,33 @@ export function BookingFlow({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-ocean-50 via-white to-gray-50 py-12 px-4">
       <div className="max-w-5xl mx-auto">
         {/* Back Button */}
-        <button
-          onClick={() => step === 1 ? onNavigate('boat-detail', { boatId }) : setStep(1)}
-          className="flex items-center gap-2 text-ocean-600 hover:text-ocean-700 mb-6"
-        >
-          <ArrowLeft size={20} />
-          <span>Retour</span>
-        </button>
+        <Button variant="ghost" onClick={() => step === 1 ? onNavigate('boat-detail', { boatId }) : setStep(1)} className="mb-6">
+          <ArrowLeft size={18} />
+          Retour
+        </Button>
 
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className={`flex items-center gap-2 ${step >= 1 ? 'text-ocean-600' : 'text-gray-400'}`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                step >= 1 ? 'bg-ocean-600 text-white' : 'bg-gray-200'
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${
+                step > 1 ? 'bg-green-500 text-white' : step >= 1 ? 'bg-ocean-600 text-white' : 'bg-gray-200'
               }`}>
                 {step > 1 ? <CheckCircle size={20} /> : '1'}
               </div>
-              <span className="hidden sm:inline">Informations</span>
+              <span className="hidden sm:inline text-sm font-medium">Informations</span>
             </div>
-            <div className={`w-16 h-0.5 ${step >= 2 ? 'bg-ocean-600' : 'bg-gray-300'}`} />
+            <div className={`w-16 h-0.5 transition-colors ${step >= 2 ? 'bg-ocean-600' : 'bg-gray-300'}`} />
             <div className={`flex items-center gap-2 ${step >= 2 ? 'text-ocean-600' : 'text-gray-400'}`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${
                 step >= 2 ? 'bg-ocean-600 text-white' : 'bg-gray-200'
               }`}>
                 2
               </div>
-              <span className="hidden sm:inline">Paiement</span>
+              <span className="hidden sm:inline text-sm font-medium">Paiement</span>
             </div>
           </div>
         </div>
@@ -492,8 +489,8 @@ export function BookingFlow({
 
           {/* Booking Summary Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-6">
-              <h3 className="text-gray-900 mb-4">Récapitulatif</h3>
+            <Card className="p-6 sticky top-6 rounded-xl border-t-4 border-t-ocean-500">
+              <h3 className="text-gray-900 font-semibold mb-4">Récapitulatif</h3>
               
               <div className="mb-4">
                 <img 
@@ -530,8 +527,8 @@ export function BookingFlow({
               </div>
 
               <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-900">Total</span>
-                <span className="text-2xl text-ocean-600">{total.toFixed(2)}€</span>
+                <span className="text-gray-900 font-semibold">Total</span>
+                <span className="text-2xl font-bold text-ocean-600">{total.toFixed(2)}€</span>
               </div>
 
               <div className="bg-ocean-50 rounded-lg p-3 text-sm text-ocean-800">

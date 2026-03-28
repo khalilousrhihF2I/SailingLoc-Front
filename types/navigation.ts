@@ -23,4 +23,5 @@ export type Page =
   | 'create-listing'
   | 'edit-listing'
   | 'booking-detail'
+  | 'how-it-works'
   | '404';

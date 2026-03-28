@@ -2,15 +2,28 @@ import { useEffect, useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { Alert } from '../components/ui/Alert';
+import { Input } from '../components/ui/Input';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { bookingService, messageService, authService } from '../services/ServiceFactory';
 import { useModal } from '../hooks/useModal';
 import { Page } from '../types/navigation';
+import { ArrowLeft, Copy, Send, Ship, Calendar, CheckCircle, XCircle, Edit, Eye } from 'lucide-react';
 
 interface OwnerBookingDetailPageProps {
     bookingId: string;
     onNavigate: (page: Page, data?: any) => void;
 }
+
+const translateStatus = (s: string) => {
+    const map: Record<string, string> = { confirmed: 'Confirmée', pending: 'En attente', completed: 'Terminée', cancelled: 'Annulée' };
+    return map[s] || s;
+};
+const statusVariant = (s: string): 'success' | 'warning' | 'default' => {
+    if (s === 'confirmed') return 'success';
+    if (s === 'pending') return 'warning';
+    return 'default';
+};
 
 export function OwnerBookingDetailPage({ bookingId, onNavigate }: OwnerBookingDetailPageProps) {
     const { showAlert, showConfirm } = useModal();
@@ -28,7 +41,6 @@ export function OwnerBookingDetailPage({ bookingId, onNavigate }: OwnerBookingDe
         try {
             const b = await bookingService.getBookingById(bookingId);
             setBooking(b);
-
             try {
                 const me = await authService.getCurrentUser();
                 setCurrentUser(me || null);
@@ -37,30 +49,22 @@ export function OwnerBookingDetailPage({ bookingId, onNavigate }: OwnerBookingDe
                     const msgs = await messageService.getMessagesByBookingAndUser(bookingId, userId);
                     setMessages(msgs || []);
                 }
-            } catch (e) {
-                // ignore message loading errors
-            }
-        } catch (err: any) {
-            setError(err?.message || String(err));
-        } finally {
-            setLoading(false);
-        }
+            } catch { /* ignore */ }
+        } catch (err: any) { setError(err?.message || String(err)); } finally { setLoading(false); }
     };
 
     useEffect(() => { refreshData(); }, [bookingId]);
 
     const formatDate = (iso?: string) => {
         if (!iso) return '';
-        try { return new Date(iso).toLocaleDateString(); } catch { return iso; }
+        try { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch { return iso; }
     };
 
     const formatCurrency = (v: number | string | undefined) => {
         try {
             const n = typeof v === 'string' ? Number(v) : (v ?? 0);
-            return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
-        } catch {
-            return (v ?? '') + ' €';
-        }
+            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+        } catch { return (v ?? '') + ' €'; }
     };
 
     const senderLabel = (m: any) => {
@@ -72,17 +76,13 @@ export function OwnerBookingDetailPage({ bookingId, onNavigate }: OwnerBookingDe
 
     const handleSendMessage = async () => {
         if (!booking || !currentUser) return;
-        if (!messageService) {
-            showAlert('Messagerie non disponible en mode mock.', 'Messagerie');
-            return;
-        }
+        if (!messageService) { showAlert('Messagerie non disponible en mode mock.', 'Messagerie'); return; }
         if (!messageText.trim()) return showAlert('Entrez un message.', 'Messagerie');
         setSending(true);
         try {
             const dto: any = {
                 receiverId: booking.renterId?.toString?.() ?? booking.renterId,
-                bookingId: booking.id,
-                boatId: booking.boatId,
+                bookingId: booking.id, boatId: booking.boatId,
                 subject: `Message from owner about booking ${booking.id}`,
                 content: messageText.trim()
             };
@@ -91,30 +91,19 @@ export function OwnerBookingDetailPage({ bookingId, onNavigate }: OwnerBookingDe
             setMessages((m) => [...m, { senderId: currentUser.id, receiverId: booking.renterId, content: dto.content, createdAt: new Date().toISOString() }]);
             showAlert(resp.message || 'Message envoyé', 'Messagerie');
             setMessageText('');
-        } catch (err: any) {
-            showAlert(err?.message || String(err), 'Erreur');
-        } finally {
-            setSending(false);
-        }
+        } catch (err: any) { showAlert(err?.message || String(err), 'Erreur'); } finally { setSending(false); }
     };
-
-    const isOwner = Boolean(currentUser && (
-        String(currentUser.role || currentUser.type || '').toLowerCase() === 'owner' ||
-        Array.isArray(currentUser.roles) && currentUser.roles.some((r: string) => String(r || '').toLowerCase() === 'owner')
-    ));
 
     const canConfirm = booking && booking.status === 'pending';
     const canCancel = booking && (booking.status === 'pending' || booking.status === 'confirmed');
 
     const handleConfirm = async () => {
         if (!booking) return;
-            try {
+        try {
             await bookingService.updateBooking({ id: booking.id, status: 'confirmed' });
             await refreshData();
             showAlert('Réservation confirmée', 'Réservation');
-        } catch (err: any) {
-            showAlert(err?.message || String(err), 'Erreur');
-        }
+        } catch (err: any) { showAlert(err?.message || String(err), 'Erreur'); }
     };
 
     const handleCancel = async () => {
@@ -126,152 +115,131 @@ export function OwnerBookingDetailPage({ bookingId, onNavigate }: OwnerBookingDe
             cancelLabel: 'Non',
             onConfirm: async () => {
                 try {
-                    await bookingService.cancelBooking(booking.id); 
+                    await bookingService.cancelBooking(booking.id);
                     showAlert('Réservation annulée', 'Réservation');
                     await refreshData();
-                } catch (err: any) {
-                    showAlert(err?.message || String(err), 'Erreur');
-                }
+                } catch (err: any) { showAlert(err?.message || String(err), 'Erreur'); }
             }
         });
     };
 
-    if (loading) return <Card className="p-6">Chargement...</Card>;
-    if (error) return <Card className="p-6 bg-red-50 border-red-200"><div className="text-red-800">Erreur: {error}</div></Card>;
-    if (!booking) return <Card className="p-6">Réservation introuvable</Card>;
+    if (loading) return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center"><div className="text-gray-500">Chargement de la réservation...</div></div>;
+    if (error) return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8"><div className="max-w-5xl mx-auto px-4"><Alert type="error">Erreur : {error}</Alert></div></div>;
+    if (!booking) return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8"><div className="max-w-5xl mx-auto px-4"><Alert type="warning">Réservation introuvable</Alert></div></div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="flex-1">
-                            <Button variant="ghost" onClick={() => onNavigate('owner-dashboard')}>Retour</Button>
-                        </div>
-                        <div className="flex-5 text-right">
-                            <Button className='mr-2' onClick={() => onNavigate('booking-detail', { bookingId: booking.id })} variant="ghost">Voir comme locataire</Button>
-                            <Button className='ml-3' size="sm" variant="primary" onClick={() => onNavigate('edit-listing', { boatId: booking.boatId })}>Gérer l'annonce</Button>
-                            <Button className='ml-3' variant="danger" onClick={handleCancel} disabled={!canCancel}>Annuler réservation</Button>
-                            {canConfirm && <Button className='ml-3' variant="secondary" onClick={handleConfirm}>Confirmer réservation</Button>}
-                        </div>
+                {/* Back + Actions */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <Button variant="ghost" onClick={() => onNavigate('owner-dashboard')}>
+                        <ArrowLeft size={18} /> Retour au tableau de bord
+                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => { try { navigator.clipboard?.writeText(booking.id); showAlert('Référence copiée', 'Référence'); } catch { showAlert('Réf: ' + booking.id, 'Référence'); } }}>
+                            <Copy size={14} /> Copier réf.
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => onNavigate('booking-detail', { bookingId: booking.id })}>
+                            <Eye size={14} /> Voir comme locataire
+                        </Button>
+                        <Button size="sm" variant="primary" onClick={() => onNavigate('edit-listing', { boatId: booking.boatId })}>
+                            <Edit size={14} /> Gérer l'annonce
+                        </Button>
+                        {canConfirm && (
+                            <Button size="sm" variant="secondary" onClick={handleConfirm}>
+                                <CheckCircle size={14} /> Confirmer
+                            </Button>
+                        )}
+                        {canCancel && (
+                            <Button size="sm" variant="danger" onClick={handleCancel}>
+                                <XCircle size={14} /> Annuler
+                            </Button>
+                        )}
                     </div>
+                </div>
 
+                {/* Booking Summary */}
                 <Card className="p-6 mb-6">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="flex-1">Réf: <span className="font-medium">{booking.id}</span></div>
-                        <div className="flex-1 text-right">
-                            <Button className='ml-3' size="sm" variant="ghost" onClick={() => { try { navigator.clipboard?.writeText(booking.id); showAlert('Référence copiée', 'Référence'); } catch { showAlert('Copier la référence: ' + booking.id, 'Référence'); } }}>Copier la référence</Button>
-                        </div>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="text-sm text-gray-500">Réf: <span className="font-mono font-medium text-gray-700">{booking.id}</span></div>
+                        <Badge variant={statusVariant(booking.status)}>{translateStatus(booking.status)}</Badge>
                     </div>
-                    <div className="flex flex-col md:flex-row gap-6 items-center">
-                        <div className="w-full md:w-48 h-40 rounded-lg overflow-hidden">
+                    <div className="flex flex-col md:flex-row gap-6">
+                        <div className="w-full md:w-56 h-40 rounded-xl overflow-hidden shrink-0">
                             <ImageWithFallback src={booking.boatImage} alt={booking.boatName} className="w-full h-full object-cover" />
                         </div>
-                        <div className="flex-1">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <h3 className="text-xl font-semibold">{booking.boatName}</h3>
-                                    <div className="text-sm text-gray-600">{formatDate(booking.startDate)} → {formatDate(booking.endDate)}</div>
+                        <div className="flex-1 flex flex-col justify-between">
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-900 mb-1">{booking.boatName}</h2>
+                                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                                    <span className="flex items-center gap-1"><Calendar size={14} /> {formatDate(booking.startDate)} → {formatDate(booking.endDate)}</span>
                                 </div>
-                                <Badge variant={booking.status === 'confirmed' ? 'success' : booking.status === 'pending' ? 'warning' : 'default'}>
-                                    {booking.status}
-                                </Badge>
+                                <Button size="sm" variant="ghost" onClick={() => onNavigate('boat-detail', { boatId: booking.boatId })}>
+                                    <Ship size={14} /> Voir le bateau
+                                </Button>
                             </div>
-
-                            <div className="mt-4 flex items-start justify-between ">
-                                <div>
-                                    <Button className='mr-2' onClick={() => onNavigate('boat-detail', { boatId: booking.boatId })} variant="ghost">Voir le bateau</Button>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-sm text-gray-600">Prix total</div>
-                                    <div className="text-2xl text-gray-900 font-semibold">{formatCurrency(booking.totalPrice)}</div>
-                                </div>
+                            <div className="text-right mt-3">
+                                <div className="text-xs text-gray-500 uppercase tracking-wider">Prix total</div>
+                                <div className="text-2xl font-semibold text-gray-900">{formatCurrency(booking.totalPrice)}</div>
                             </div>
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-6 mb-6">
-                    <div className="flex flex-col md:flex-row gap-6 items-center">
-                        <div className="flex-1">
-                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-ocean-100 text-ocean-700 rounded-full flex items-center justify-center text-lg font-semibold">{(booking.renterName ? (booking.renterName.split(' ').map((s: string) => s[0]).slice(0, 2).join('')) : (booking.renterEmail ? booking.renterEmail[0] : 'U')).toUpperCase()}</div>
-                                    <div>
-                                        <div className="text-sm text-gray-600">Locataire</div>
-                                        <div className="text-gray-900 font-medium">{booking.renterName ?? booking.renterEmail ?? '—'}</div>
-                                        <div className="flex items-center gap-3 mt-1">
-                                            {booking.renterEmail ? (
-                                                <a href={`mailto:${booking.renterEmail}`} className="text-sm text-ocean-600 hover:underline">Envoyer un email</a>
-                                            ) : null}
-                                            {booking.renterPhoneNumber ? (
-                                                <a href={`tel:${booking.renterPhoneNumber}`} className="text-sm text-ocean-600 hover:underline">Appeler</a>
-                                            ) : null}
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
+                {/* Renter Contact */}
+                <Card className="p-5 mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-ocean-100 text-ocean-700 rounded-full flex items-center justify-center text-lg font-semibold shrink-0">
+                            {(booking.renterName ? booking.renterName.split(' ').map((s: string) => s[0]).slice(0, 2).join('') : (booking.renterEmail ? booking.renterEmail[0] : 'U')).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider">Locataire</div>
+                            <div className="text-gray-900 font-medium">{booking.renterName ?? booking.renterEmail ?? '—'}</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            {booking.renterEmail && <a href={`mailto:${booking.renterEmail}`} className="text-sm text-ocean-600 hover:underline">Email</a>}
+                            {booking.renterPhoneNumber && <a href={`tel:${booking.renterPhoneNumber}`} className="text-sm text-ocean-600 hover:underline">Appeler</a>}
                         </div>
                     </div>
                 </Card>
 
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="border-b mb-4">
-                        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                            <button className="py-3 px-1 border-b-2 border-ocean-600 text-ocean-600">Messages</button>
-                            <button className="py-3 px-1 text-gray-500">Notes</button>
-                        </nav>
-                    </div>
+                {/* Messages Section */}
+                <Card className="p-6">
+                    <h3 className="text-gray-900 font-semibold mb-4">Messages</h3>
 
-                    <div>
-                        <div className="mb-4">
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="flex-1">
-                                    <h5 className="text-sm font-medium mb-2">Historique des messages</h5>
-                                </div>
-                                <div className="flex-2 text-right">
-                                    <Button className='mr-2' onClick={() => refreshData()} variant="ghost">Rafraîchir</Button>
-                                </div>
-                            </div>
-                            {messages.length === 0 && <div className="text-sm text-gray-500">Pas encore de messages — vous pouvez envoyer le premier message au locataire ci-dessous.</div>}
+                    {messages.length === 0 && <div className="text-sm text-gray-500 mb-4">Aucun message — envoyez le premier message au locataire ci-dessous.</div>}
+
+                    {messages.length > 0 && (
+                        <div className="space-y-3 mb-6 max-h-96 overflow-y-auto pr-1">
                             {messages.map((m, idx) => {
                                 const isFromRenter = booking && String(m.senderId) === String(booking.renterId);
-                                const alignClass = isFromRenter ? 'justify-start' : 'justify-end';
-                                const bubbleBg = isFromRenter ? 'bg-ocean-50 border-ocean-100 text-gray-800' : 'bg-green-50 border-green-100 text-gray-800';
-                                const textXs = 'text-xs text-gray-500';
                                 return (
-                                    <div key={idx} className={`mb-3 flex ${alignClass}`}>
-                                        <div className={`max-w-[75%] p-3 border rounded-md ${bubbleBg}`}>
-                                            <div className={textXs}>{senderLabel(m)} • {new Date(m.createdAt).toLocaleString()}</div>
+                                    <div key={idx} className={`flex ${isFromRenter ? 'justify-start' : 'justify-end'}`}>
+                                        <div className={`max-w-[75%] p-3 rounded-xl ${isFromRenter ? 'bg-gray-100 text-gray-800' : 'bg-green-50 text-gray-800'}`}>
+                                            <div className="text-[11px] text-gray-500 mb-1">{senderLabel(m)} • {new Date(m.createdAt).toLocaleString()}</div>
                                             <div className="text-sm">{m.content}</div>
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
+                    )}
 
-                        <div>
-                            <h5 className="text-sm font-medium mb-2">Nouveau message</h5>
-                            {isOwner ? (
-                                <>
-                                    <textarea value={messageText} onChange={(e) => setMessageText(e.target.value)} rows={4} className="w-full p-3 border border-gray-300 rounded-lg mb-2" />
-                                    <div className="flex gap-3">
-                                        <Button onClick={handleSendMessage} disabled={sending || !messageService}>{sending ? 'Envoi...' : 'Envoyer au locataire'}</Button>
-                                        <Button variant="ghost" onClick={() => setMessageText('')}>Réinitialiser</Button>
-                                    </div>
-                                    {!messageService && (
-                                        <div className="text-xs text-gray-500 mt-2">Messagerie non configurée (mode mock). Activez le service messages pour envoyer des messages.</div>
-                                    )}
-                                </>
-                            ) : (
-                                <div className="text-sm text-gray-600">Connectez-vous en tant que propriétaire pour envoyer un message.</div>
-                            )}
+                    <div className="flex items-end gap-3 pt-4 border-t border-gray-200">
+                        <div className="flex-1">
+                            <Input
+                                placeholder="Écrire un message au locataire..."
+                                value={messageText}
+                                onChange={(e) => setMessageText(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
+                            />
                         </div>
+                        <Button variant="primary" onClick={handleSendMessage} disabled={sending || !messageText.trim()}>
+                            <Send size={16} /> {sending ? 'Envoi...' : 'Envoyer'}
+                        </Button>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     );
 }
-
-export default OwnerBookingDetailPage;

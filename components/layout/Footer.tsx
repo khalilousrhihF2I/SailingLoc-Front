@@ -38,7 +38,7 @@ export function Footer({ onNavigate: _onNavigate }: FooterProps) {
                 </Link>
               </li>
               <li>
-                <Link to="/a-propos" className="text-ocean-200 hover:text-white transition-colors">
+                <Link to="/comment-ca-marche" className="text-ocean-200 hover:text-white transition-colors">
                   Comment ça marche
                 </Link>
               </li>

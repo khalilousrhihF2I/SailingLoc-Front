@@ -43,24 +43,24 @@ export function BookingConfirmationPage({ bookingData, onNavigate }: BookingConf
   const days = calculateDays();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Success Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="text-center mb-8 animate-fade-in-up">
+          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
             <Check className="text-green-600" size={48} />
           </div>
-          <h1 className="text-gray-900 mb-2">Réservation confirmée !</h1>
-          <p className="text-xl text-gray-600">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Réservation confirmée !</h1>
+          <p className="text-lg text-gray-600">
             Votre location a été confirmée avec succès
           </p>
         </div>
 
         {/* Booking ID */}
-        <Card className="p-6 mb-6 bg-ocean-50 border-ocean-200">
+        <Card className="p-6 mb-6 bg-ocean-50 border-ocean-200 rounded-xl">
           <div className="text-center">
-            <div className="text-sm text-ocean-700 mb-2">Numéro de réservation</div>
-            <div className="text-2xl text-ocean-900 font-mono">{bookingId}</div>
+            <div className="text-xs text-ocean-600 uppercase tracking-wider mb-2">Numéro de réservation</div>
+            <div className="text-2xl font-bold text-ocean-900 font-mono tracking-wide">{bookingId}</div>
           </div>
         </Card>
 
@@ -77,7 +77,7 @@ export function BookingConfirmationPage({ bookingData, onNavigate }: BookingConf
 
         {/* Booking Details */}
         <Card className="p-6 mb-6">
-          <h2 className="text-gray-900 mb-6">Détails de votre location</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Détails de votre location</h2>
 
           {/* Boat Info */}
           <div className="flex gap-4 mb-6 pb-6 border-b border-gray-200">
@@ -141,7 +141,7 @@ export function BookingConfirmationPage({ bookingData, onNavigate }: BookingConf
               <span>Assurance protection</span>
               <span>Incluse</span>
             </div>
-            <div className="flex items-center justify-between text-xl text-gray-900">
+            <div className="flex items-center justify-between text-xl font-bold text-gray-900">
               <span>Total payé</span>
               <span>{totalPrice.toFixed(2)}€</span>
             </div>

@@ -125,7 +125,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
         </div>
       </section>
 
-      {/* Notre Équipe - CEO */}
+      {/* Notre Fondateur */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -135,94 +135,63 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <Card className="p-8 md:p-12">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                {/* Photo/Avatar */}
-                <div className="flex justify-center md:justify-start">
-                  <div className="relative">
-                    <div className="w-40 h-40 bg-gradient-to-br from-ocean-500 to-ocean-700 rounded-full flex items-center justify-center text-white text-5xl shadow-xl">
-                      KO
+              <div className="text-center md:text-left">
+                <h3 className="text-gray-900 text-xl font-semibold mb-1">Khalil Ousrhir</h3>
+                <div className="text-ocean-600 mb-6">
+                  Fondateur & CEO de SailingLoc
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <Award className="text-ocean-600 mt-1 shrink-0" size={20} />
+                    <div>
+                      <div className="text-gray-900 font-medium">Formation</div>
+                      <div className="text-gray-600">
+                        Étudiant en 4ème année à l'École DSP - Institut F2I
+                      </div>
                     </div>
-                    <div className="absolute -bottom-2 -right-2 bg-orange-500 text-white px-3 py-1 rounded-full text-sm shadow-lg">
-                      CEO
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="text-ocean-600 mt-1 shrink-0" size={20} />
+                    <div>
+                      <div className="text-gray-900 font-medium">Vision</div>
+                      <div className="text-gray-600">
+                        Révolutionner le secteur de la location nautique en combinant technologie et passion de la mer
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Anchor className="text-ocean-600 mt-1 shrink-0" size={20} />
+                    <div>
+                      <div className="text-gray-900 font-medium">Mission</div>
+                      <div className="text-gray-600">
+                        Rendre la navigation accessible à tous et créer une communauté de passionnés autour de valeurs de confiance et de partage
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Informations */}
-                <div className="md:col-span-2 text-center md:text-left">
-                  <h3 className="text-gray-900 mb-2">Khalil Ousrhir</h3>
-                  <div className="text-ocean-600 mb-4">
-                    Fondateur & CEO de SailingLoc
-                  </div>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-start gap-3">
-                      <Award className="text-ocean-600 mt-1 shrink-0" size={20} />
-                      <div>
-                        <div className="text-gray-900">Formation</div>
-                        <div className="text-gray-600">
-                          Étudiant en 4ème année à l'École DSP - Institut F2I
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <TrendingUp className="text-ocean-600 mt-1 shrink-0" size={20} />
-                      <div>
-                        <div className="text-gray-900">Vision</div>
-                        <div className="text-gray-600">
-                          Révolutionner le secteur de la location nautique en combinant technologie et passion de la mer
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Anchor className="text-ocean-600 mt-1 shrink-0" size={20} />
-                      <div>
-                        <div className="text-gray-900">Mission</div>
-                        <div className="text-gray-600">
-                          Rendre la navigation accessible à tous et créer une communauté de passionnés autour de valeurs de confiance et de partage
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Details */}
-                  <div className="space-y-2 mb-6 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin size={16} className="text-ocean-600 shrink-0" />
-                      <span>44 Avenue François Mitterrand, 77500 Chelles</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Phone size={16} className="text-ocean-600 shrink-0" />
-                      <a href="tel:+33773632345" className="hover:text-ocean-600 transition-colors">07 73 63 23 45</a>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Mail size={16} className="text-ocean-600 shrink-0" />
-                      <a href="mailto:contact@sailingloc.com" className="hover:text-ocean-600 transition-colors">contact@sailingloc.com</a>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 justify-center md:justify-start">
-                    <a
-                      href="https://www.linkedin.com/in/khalil-ousrhir-9130bb226"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Linkedin size={18} />
-                      LinkedIn
-                    </a>
-                    <a
-                      href="tel:+33773632345"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
-                    >
-                      <Phone size={18} />
-                      Appeler
-                    </a>
-                  </div>
+                <div className="flex gap-3 justify-center md:justify-start">
+                  <a
+                    href="https://www.linkedin.com/in/khalil-ousrhir-9130bb226"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Linkedin size={18} />
+                    LinkedIn
+                  </a>
+                  <a
+                    href="mailto:contact@sailingloc.com"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors text-sm"
+                  >
+                    <Mail size={18} />
+                    Contact
+                  </a>
                 </div>
               </div>
             </Card>

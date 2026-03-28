@@ -121,10 +121,10 @@ const AdminUsersPage: React.FC<{ onNavigate?: (p: Page, d?: any) => void }> = ({
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-sm text-gray-600">Email</th>
-                <th className="text-left py-3 px-4 text-sm text-gray-600">Nom</th>
-                <th className="text-left py-3 px-4 text-sm text-gray-600">Rôles</th>
-                <th className="text-right py-3 px-4 text-sm text-gray-600">Actions</th>
+                <th className="text-left py-3 px-4 text-[11px] uppercase tracking-wider text-gray-500">Email</th>
+                <th className="text-left py-3 px-4 text-[11px] uppercase tracking-wider text-gray-500">Nom</th>
+                <th className="text-left py-3 px-4 text-[11px] uppercase tracking-wider text-gray-500">Rôles</th>
+                <th className="text-right py-3 px-4 text-[11px] uppercase tracking-wider text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody>

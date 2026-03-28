@@ -56,3 +56,43 @@ export function DashboardSkeleton() {
     </div>
   );
 }
+
+export function CategoryCardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl p-6 text-center shadow-sm" aria-hidden="true">
+      <Skeleton className="w-16 h-16 rounded-full mx-auto mb-4" />
+      <Skeleton className="h-5 w-3/4 mx-auto mb-2" />
+      <Skeleton className="h-4 w-1/2 mx-auto" />
+    </div>
+  );
+}
+
+export function CategoryGridSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6" role="status" aria-label="Chargement des catégories">
+      {Array.from({ length: count }).map((_, i) => (
+        <CategoryCardSkeleton key={i} />
+      ))}
+      <span className="sr-only">Chargement en cours...</span>
+    </div>
+  );
+}
+
+export function DestinationCardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm" aria-hidden="true">
+      <Skeleton className="h-48 w-full rounded-none" />
+    </div>
+  );
+}
+
+export function DestinationGridSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" role="status" aria-label="Chargement des destinations">
+      {Array.from({ length: count }).map((_, i) => (
+        <DestinationCardSkeleton key={i} />
+      ))}
+      <span className="sr-only">Chargement en cours...</span>
+    </div>
+  );
+}

@@ -259,12 +259,12 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <Card className=" w-full p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} className="text-green-600" />
+      <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-gray-50 flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-10 text-center animate-fade-in-up rounded-xl">
+          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <CheckCircle size={48} className="text-green-600" />
           </div>
-          <h2 className="text-gray-900 mb-2">Annonce créée avec succès !</h2>
+          <h2 className="text-gray-900 font-semibold text-xl mb-2">Annonce créée avec succès !</h2>
           <p className="text-gray-600 mb-4">
             Votre bateau "{basicInfo.name}" est maintenant en ligne.
           </p>
@@ -277,18 +277,19 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-ocean-50 via-white to-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => step === 1 ? onNavigate('owner-dashboard') : handleBack()}
-            className="flex items-center gap-2 text-ocean-600 hover:text-ocean-700 mb-4"
+            className="mb-4"
           >
             <ArrowLeft size={20} />
             <span>Retour</span>
-          </button>
-          <h1 className="text-gray-900">Créer une nouvelle annonce</h1>
+          </Button>
+          <h1 className="text-gray-900 font-bold text-2xl">Créer une nouvelle annonce</h1>
           <p className="text-gray-600">
             Remplissez les informations de votre bateau pour créer une annonce
           </p>
@@ -302,7 +303,7 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
         />
 
         {/* Form */}
-        <Card className="p-6 md:p-8">
+        <Card className="p-6 md:p-8 rounded-xl">
           {error && (
             <Alert type="error">
               {error}
@@ -581,9 +582,9 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
 
               {/* Photo principale recap */}
               {details.image && (
-                <div className="p-4 bg-ocean-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-2">Photo principale :</p>
-                  <div className="w-full h-48 rounded-lg overflow-hidden">
+                <div className="p-4 bg-ocean-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Photo principale</p>
+                  <div className="w-full h-48 rounded-xl overflow-hidden">
                     <img 
                       src={details.image} 
                       alt="Photo principale" 
@@ -637,7 +638,7 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {photos.map((url, index) => (
                       <div key={index} className="relative group">
-                        <div className="w-full h-32 rounded-lg overflow-hidden">
+                      <div className="w-full h-32 rounded-xl overflow-hidden">
                           <img 
                             src={url} 
                             alt={`Photo ${index + 1}`} 
@@ -666,8 +667,8 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
           {step === 6 && (
             <div className="space-y-6">
               <div className="mt-3">
-                <CheckCircle className="text-ocean-600 mb-2" size={32} />
-                <h3 className="text-gray-900 mb-2">Récapitulatif des informations avant la validation</h3>
+                <CheckCircle className="text-green-600 mb-2" size={32} />
+                <h3 className="text-gray-900 font-semibold mb-2">Récapitulatif des informations avant la validation</h3>
                 <p className="text-gray-600">
                   Vérifiez les informations avant d'enregistrer
                 </p>
@@ -675,9 +676,9 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
 
               {/* Photo principale */}
               {details.image && (
-                <div className="p-4 bg-ocean-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-2">Photo principale :</p>
-                  <div className="w-full h-64 rounded-lg overflow-hidden">
+                <div className="p-4 bg-ocean-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Photo principale</p>
+                  <div className="w-full h-64 rounded-xl overflow-hidden">
                     <img
                       src={details.image}
                       alt="Photo principale"
@@ -691,8 +692,8 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
               )}
 
               {/* Récapitulatif */}
-              <div className="p-6 bg-gray-50 rounded-lg space-y-4">
-                <h4 className="text-gray-900 mb-3">Informations du bateau</h4>
+              <div className="p-6 bg-gray-50 rounded-xl space-y-4">
+                <h4 className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">Informations du bateau</h4>
 
                 <div className="space-y-3">
                   <div className="flex justify-between border-b border-gray-200 pb-2">
@@ -727,7 +728,7 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="text-gray-600">Prix :</span>
-                    <span className="text-gray-900">{details.price}€/jour</span>
+                    <span className="text-gray-900 font-bold">{details.price}€/jour</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Équipements :</span>
@@ -737,15 +738,15 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
               </div>
 
               {/* Description */}
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-700 mb-2">Description :</p>
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Description</p>
                 <p className="text-gray-600 text-sm">{details.description}</p>
               </div>
 
               {/* Équipements */}
               {equipment.length > 0 && (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-3">Équipements ({equipment.length}) :</p>
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">Équipements ({equipment.length})</p>
                   <div className="flex flex-wrap gap-2">
                     {equipment.map((item) => (
                       <span
@@ -761,11 +762,11 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
 
               {/* Photos supplémentaires (thumbnails) */}
               {photos && photos.length > 0 && (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700 mb-3">Photos supplémentaires :</p>
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">Photos supplémentaires</p>
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                     {photos.map((url, i) => (
-                      <div key={i} className="w-full h-20 rounded overflow-hidden border">
+                      <div key={i} className="w-full h-20 rounded-xl overflow-hidden border">
                         <img
                           src={url}
                           alt={`Photo supplémentaire ${i + 1}`}

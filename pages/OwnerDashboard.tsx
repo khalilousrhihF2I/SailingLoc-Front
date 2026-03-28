@@ -4,6 +4,10 @@ import { handleLogout } from '../utils/handleLogout';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { Input } from '../components/ui/Input';
+import { DashboardShell, StatCard } from '../components/ui/DashboardShell';
+import { TablePagination } from '../components/ui/TablePagination';
 import { ownerDashboardService, authService, userService, bookingService, boatService, userDocumentService } from '../services/ServiceFactory';
 import { useModal } from '../hooks/useModal';
 import { Page } from '../types/navigation';
@@ -34,6 +38,9 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profile, setProfile] = useState<any | null>(null);
   const [payments, setPayments] = useState<any[]>([]);
+  const [bookingsPage, setBookingsPage] = useState(1);
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const OWNER_PAGE_SIZE = 10;
 
   useEffect(() => {
     let mounted = true;
@@ -358,154 +365,51 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
   const upcomingPaymentsTotal = pendingTotal + futureTotal - overlapSum;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-gray-900 mb-2">Espace propriétaire</h2>
-          <p className="text-gray-600">Gérez vos bateaux et vos réservations</p>
+    <DashboardShell
+      title="Espace propriétaire"
+      subtitle="Gérez vos bateaux et vos réservations"
+      navItems={[
+        { id: 'overview', label: 'Tableau de bord', icon: <TrendingUp size={20} /> },
+        { id: 'boats', label: 'Mes bateaux', icon: <Ship size={20} /> },
+        { id: 'bookings', label: 'Réservations', icon: <Calendar size={20} />, badge: pendingBookings.length > 0 ? pendingBookings.length : undefined },
+        { id: 'documents', label: 'Documents', icon: <FileText size={20} /> },
+        { id: 'revenue', label: 'Revenus', icon: <TrendingUp size={20} /> },
+        { id: 'calendar', label: 'Disponibilités', icon: <Calendar size={20} /> },
+        { id: 'profile', label: 'Profil', icon: <User size={20} /> },
+        { id: 'logout', label: 'Déconnexion', icon: <LogOut size={20} />, variant: 'danger' as const },
+      ]}
+      activeTab={activeTab}
+      onTabChange={(id) => {
+        if (id === 'logout') { handleLogout(onLogout); return; }
+        setActiveTab(id as any);
+      }}
+      sidebarHeader={
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 bg-ocean-600 rounded-full overflow-hidden flex items-center justify-center text-white text-xl mb-3">
+            {profileForm?.avatar ? (
+              <img src={profileForm.avatar} alt={`${profileForm.firstName || ''} ${profileForm.lastName || ''}`} className="w-full h-full object-cover" />
+            ) : (
+              <span className="uppercase">{((profileForm?.firstName?.[0] ?? profileForm?.lastName?.[0]) || 'U').toUpperCase()}</span>
+            )}
+          </div>
+          <div className="text-gray-900 font-medium text-sm">{(profileForm?.firstName || profile?.firstName || '') + (profileForm?.lastName || profile?.lastName ? ' ' + (profileForm?.lastName || profile?.lastName) : '') || 'Propriétaire'}</div>
+          <div className="text-xs text-gray-500">{(profileForm?.roles?.includes?.('Owner') || profile?.roles?.includes?.('Owner')) ? 'Propriétaire vérifié' : 'Propriétaire'}</div>
         </div>
+      }
+    >
+      {/* Loading / Error states */}
+      {loading && <Card className="p-6 text-center text-gray-500 mb-3">Chargement des données...</Card>}
+      {error && <Alert type="error">Erreur : {error}</Alert>}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <Card className="p-6">
-              <div className="flex flex-col items-center mb-6 pb-6 border-b border-gray-200">
-                <div className="w-20 h-20 bg-ocean-600 rounded-full overflow-hidden flex items-center justify-center text-white text-2xl mb-3">
-                  {profileForm?.avatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profileForm.avatar} alt={`${profileForm.firstName || ''} ${profileForm.lastName || ''}`} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="uppercase">{((profileForm?.firstName?.[0] ?? profileForm?.lastName?.[0]) || 'U').toUpperCase()}</span>
-                  )}
-                </div>
-                <div className="text-center">
-                  <div className="text-gray-900">{(profileForm?.firstName || profile?.firstName || '') + (profileForm?.lastName || profile?.lastName ? ' ' + (profileForm?.lastName || profile?.lastName) : '') || 'Propriétaire'}</div>
-                  <div className="text-sm text-gray-600">{(profileForm?.roles?.includes?.('Owner') || profile?.roles?.includes?.('Owner')) ? 'Propriétaire vérifié' : 'Propriétaire'}</div>
-                </div>
-              </div>
-
-              <nav className="space-y-2">
-                <button
-                  onClick={() => setActiveTab('overview')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'overview'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <TrendingUp size={20} />
-                  <span>Tableau de bord</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('boats')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'boats'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Ship size={20} />
-                  <span>Mes bateaux</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('bookings')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'bookings'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Calendar size={20} />
-                  <span>Réservations</span>
-                  {pendingBookings.length > 0 && (
-                    <Badge variant="warning" size="sm">{pendingBookings.length}</Badge>
-                  )}
-                </button> 
-                <button
-                  onClick={() => setActiveTab('documents')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'documents'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <FileText size={20} />
-                  <span>Documents</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('revenue')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'revenue'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <TrendingUp size={20} />
-                  <span>Revenus</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('calendar')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'calendar'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Calendar size={20} />
-                  <span>Disponibilités</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'profile'
-                      ? 'bg-ocean-50 text-ocean-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                 <User size={20} />
-                  <span>Profil</span>
-                </button>
-                <button
-                  onClick={() => handleLogout(onLogout)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <LogOut size={20} />
-                  <span>Déconnexion</span>
-                </button>
-              </nav>
-            </Card>
-          </aside>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 {/* Stats */}
-                {loading && <Card className="p-6">Chargement...</Card>}
-                {error && <Card className="p-6 bg-red-50 border-red-200"><div className="text-red-800">Erreur: {error}</div></Card>}
                 {!loading && !error && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <Card className="p-6">
-                    <div className="text-sm text-gray-600 mb-1">Bateaux</div>
-                    <div className="text-3xl text-gray-900 mb-1">{ownerBoats.length}</div>
-                    <div className="text-xs text-green-600">+1 ce mois</div>
-                  </Card>
-                  <Card className="p-6">
-                    <div className="text-sm text-gray-600 mb-1">Réservations</div>
-                    <div className="text-3xl text-gray-900 mb-1">{ownerBookings.length}</div>
-                    <div className="text-xs text-orange-600">{pendingBookings.length} en attente</div>
-                  </Card>
-                  <Card className="p-6">
-                    <div className="text-sm text-gray-600 mb-1">Revenus totaux</div>
-                    <div className="text-3xl text-gray-900 mb-1">{totalRevenue}€</div>
-                    <div className="text-xs text-green-600">+15% ce mois</div>
-                  </Card>
-                  <Card className="p-6">
-                    <div className="text-sm text-gray-600 mb-1">Taux d'occupation</div>
-                    <div className="text-3xl text-gray-900 mb-1">78%</div>
-                    <div className="text-xs text-gray-600">Sur 30 jours</div>
-                  </Card>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <StatCard label="Bateaux" value={ownerBoats.length} icon={<Ship className="text-ocean-600" size={22} />} iconBg="bg-ocean-100" subtitle="+1 ce mois" />
+                  <StatCard label="Réservations" value={ownerBookings.length} icon={<Calendar className="text-orange-600" size={22} />} iconBg="bg-orange-100" subtitle={`${pendingBookings.length} en attente`} />
+                  <StatCard label="Revenus totaux" value={`${totalRevenue}€`} icon={<TrendingUp className="text-green-600" size={22} />} iconBg="bg-green-100" subtitle="+15% ce mois" />
+                  <StatCard label="Taux d'occupation" value="78%" icon={<Calendar className="text-gray-600" size={22} />} iconBg="bg-gray-100" subtitle="Sur 30 jours" />
                 </div>
                 )}
 
@@ -707,7 +611,7 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
               <Card className="p-6">
                 <h3 className="text-gray-900 mb-6">Toutes les réservations</h3>
                 <div className="space-y-4">
-                    {ownerBookings.map((booking) => (
+                    {ownerBookings.slice((bookingsPage - 1) * OWNER_PAGE_SIZE, bookingsPage * OWNER_PAGE_SIZE).map((booking) => (
                     <div
                       key={booking.id}
                       className="border border-gray-200 rounded-lg hover:border-ocean-300 transition-colors overflow-hidden"
@@ -892,76 +796,86 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
                     </div>
                   ))}
                 </div>
+                <TablePagination
+                  currentPage={bookingsPage}
+                  totalPages={Math.ceil(ownerBookings.length / OWNER_PAGE_SIZE)}
+                  onPageChange={setBookingsPage}
+                  totalItems={ownerBookings.length}
+                />
               </Card>
             )}
 
             {activeTab === 'revenue' && (
               <div className="space-y-6">
+                {/* Revenue Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="p-5 border-green-100 bg-green-50/30">
+                    <div className="text-sm text-green-700 mb-1">Revenus totaux</div>
+                    <div className="text-2xl font-semibold text-green-900">{formatted(computedTotalRevenue)}€</div>
+                  </Card>
+                  <Card className="p-5 border-ocean-100 bg-ocean-50/30">
+                    <div className="text-sm text-ocean-700 mb-1">Ce mois</div>
+                    <div className="text-2xl font-semibold text-ocean-900">{formatted(thisMonthTotal)}€</div>
+                  </Card>
+                  <Card className="p-5 border-orange-100 bg-orange-50/30">
+                    <div className="text-sm text-orange-700 mb-1">Paiements à venir</div>
+                    <div className="text-2xl font-semibold text-orange-900">{formatted(upcomingPaymentsTotal)}€</div>
+                  </Card>
+                  <Card className="p-5 border-gray-100 bg-gray-50/30">
+                    <div className="text-sm text-gray-700 mb-1">Nombre de paiements</div>
+                    <div className="text-2xl font-semibold text-gray-900">{payments.length}</div>
+                  </Card>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => reloadPayments()}>Rafraîchir les paiements</Button>
+                  <Button variant="ghost" size="sm" onClick={() => exportPaymentsCsv()}>Exporter CSV</Button>
+                </div>
+
+                {/* Payments Table */}
                 <Card className="p-6">
-                  <h3 className="text-gray-900 mb-6">Revenus</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                      <div>
-                        <div className="text-sm text-gray-600">Revenus totaux</div>
-                        <div className="text-2xl text-gray-900">{formatted(computedTotalRevenue)}€</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => reloadPayments()}>Rafraîchir les paiements</Button>
-                        <Button variant="ghost" size="sm" onClick={() => exportPaymentsCsv()}>Exporter CSV</Button>
-                      </div>
+                  <h4 className="text-[11px] uppercase tracking-wider text-gray-500 mb-4">Historique des paiements</h4>
+                  {payments.length === 0 ? (
+                    <div className="text-sm text-gray-500 py-6 text-center">Aucun paiement trouvé. Cliquez sur "Rafraîchir les paiements".</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200">
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID Réservation</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Locataire</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dates</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Montant</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payments.slice((paymentsPage - 1) * OWNER_PAGE_SIZE, paymentsPage * OWNER_PAGE_SIZE).map((p) => (
+                            <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                              <td className="py-3 px-4 text-sm text-gray-600 font-mono">{p.id}</td>
+                              <td className="py-3 px-4 text-sm text-gray-900">{p.renterName ?? p.renterEmail}</td>
+                              <td className="py-3 px-4 text-sm text-gray-500">{formatDate(p.startDate)} → {formatDate(p.endDate)}</td>
+                              <td className="py-3 px-4 text-sm font-semibold text-gray-900">{p.amount}€</td>
+                              <td className="py-3 px-4">
+                                <Badge variant={p.paymentStatus?.toLowerCase() === 'paid' || p.paymentStatus?.toLowerCase() === 'payé' ? 'success' : p.paymentStatus?.toLowerCase() === 'pending' ? 'warning' : 'default'} size="sm">
+                                  {p.paymentStatus}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <TablePagination
+                        currentPage={paymentsPage}
+                        totalPages={Math.ceil(payments.length / OWNER_PAGE_SIZE)}
+                        onPageChange={setPaymentsPage}
+                        totalItems={payments.length}
+                      />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="text-sm text-gray-600 mb-1">Ce mois</div>
-                        <div className="text-xl text-gray-900">{formatted(thisMonthTotal)}€</div>
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="text-sm text-gray-600 mb-1">Paiements à venir</div>
-                        <div className="text-xl text-gray-900">{formatted(upcomingPaymentsTotal)}€</div>
-                      </div>
-                    </div>
-                    {/* Payments table */}
-                    <div className="mt-6">
-                      <h4 className="text-lg mb-3">Historique des paiements</h4>
-                      {payments.length === 0 ? (
-                        <div className="text-sm text-gray-500">Aucun paiement trouvé. Cliquez sur "Rafraîchir les paiements".</div>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full text-sm text-left">
-                            <thead>
-                              <tr className="text-xs text-gray-500">
-                                <th className="px-3 py-2">ID Réservation</th>
-                                <th className="px-3 py-2">Locataire</th>
-                                <th className="px-3 py-2">Dates</th>
-                                <th className="px-3 py-2">Montant</th>
-                                <th className="px-3 py-2">Statut paiement</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {payments.map((p) => (
-                                <tr key={p.id} className="border-t">
-                                  <td className="px-3 py-2">{p.id}</td>
-                                  <td className="px-3 py-2">{p.renterName ?? p.renterEmail}</td>
-                                  <td className="px-3 py-2">{formatDate(p.startDate)} → {formatDate(p.endDate)}</td>
-                                  <td className="px-3 py-2">{p.amount}€</td>
-                                  <td className="px-3 py-2">{p.paymentStatus}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  )}
                 </Card>
               </div>
-            )}
-
-            {activeTab === 'profile' && (
-              <Card className="p-6">
-                <h3 className="text-gray-900 mb-6">Mon profil</h3>
-                <div className="space-y-6 mt-3">{/* existing profile content unchanged */}</div>
-              </Card>
             )}
 
             {activeTab === 'documents' && (
@@ -1059,90 +973,18 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
 
                     <div className="md:col-span-2">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Prénom</label>
-                          <input
-                            type="text"
-                            value={profileForm.firstName}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, firstName: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Nom</label>
-                          <input
-                            type="text"
-                            value={profileForm.lastName}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, lastName: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Email</label>
-                          <input
-                            type="email"
-                            value={profileForm.email}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, email: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Téléphone</label>
-                          <input
-                            type="tel"
-                            value={profileForm.phone ?? ''}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, phone: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
+                        <Input label="Prénom" type="text" value={profileForm.firstName} onChange={(e) => setProfileForm((p:any) => ({ ...p, firstName: e.target.value }))} />
+                        <Input label="Nom" type="text" value={profileForm.lastName} onChange={(e) => setProfileForm((p:any) => ({ ...p, lastName: e.target.value }))} />
+                        <Input label="Email" type="email" value={profileForm.email} onChange={(e) => setProfileForm((p:any) => ({ ...p, email: e.target.value }))} />
+                        <Input label="Téléphone" type="tel" value={profileForm.phone ?? ''} onChange={(e) => setProfileForm((p:any) => ({ ...p, phone: e.target.value }))} />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Rue</label>
-                          <input
-                            type="text"
-                            value={profileForm.street}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, street: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Ville</label>
-                          <input
-                            type="text"
-                            value={profileForm.city}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, city: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">État / Région</label>
-                          <input
-                            type="text"
-                            value={profileForm.state}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, state: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Code postal</label>
-                          <input
-                            type="text"
-                            value={profileForm.postalCode}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, postalCode: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-700 mb-2">Pays</label>
-                          <input
-                            type="text"
-                            value={profileForm.country}
-                            onChange={(e) => setProfileForm((p:any) => ({ ...p, country: e.target.value }))}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                          />
-                        </div>
+                        <Input label="Rue" type="text" value={profileForm.street} onChange={(e) => setProfileForm((p:any) => ({ ...p, street: e.target.value }))} />
+                        <Input label="Ville" type="text" value={profileForm.city} onChange={(e) => setProfileForm((p:any) => ({ ...p, city: e.target.value }))} />
+                        <Input label="État / Région" type="text" value={profileForm.state} onChange={(e) => setProfileForm((p:any) => ({ ...p, state: e.target.value }))} />
+                        <Input label="Code postal" type="text" value={profileForm.postalCode} onChange={(e) => setProfileForm((p:any) => ({ ...p, postalCode: e.target.value }))} />
+                        <Input label="Pays" type="text" value={profileForm.country} onChange={(e) => setProfileForm((p:any) => ({ ...p, country: e.target.value }))} />
                       </div>
 
                       <div className="mt-6 flex items-center gap-3">
@@ -1253,9 +1095,6 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
                 </Card>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+    </DashboardShell>
   );
 }
