@@ -114,7 +114,6 @@ export function BookingDetailPage({ bookingId, onNavigate }: BookingDetailPagePr
         String(currentUser.role || currentUser.type || '').toLowerCase() === 'renter' ||
         Array.isArray(currentUser.roles) && currentUser.roles.some((r: string) => String(r || '').toLowerCase() === 'renter')
     ));
-   console.log('Current user:', currentUser, 'isRenter:', isRenter);
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">

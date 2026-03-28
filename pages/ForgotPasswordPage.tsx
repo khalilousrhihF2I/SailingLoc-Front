@@ -93,7 +93,7 @@ export function ForgotPasswordPage({onNavigate }: ForgotPasswordPageProps) {
 
   return ( 
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div style={{ width: '100%', maxWidth: '28rem' }}>
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h3 className="text-gray-900 mb-6">Mot de passe oublié</h3>
           <p className="text-gray-600 mb-6">Suivez les étapes pour réinitialiser votre mot de passe.</p>

@@ -63,15 +63,14 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
 
       <Dialog open={open} onOpenChange={(val) => { if (!val) setOpen(false); }}>
-        <DialogContent className="bg-white text-black  overflow-auto" style={{ maxWidth: '30vw' }}>
+        <DialogContent className="bg-white text-black overflow-auto w-[90vw] max-w-lg sm:max-w-xl">
           <DialogHeader>
             {title && <DialogTitle className="text-gray-900">{title}</DialogTitle>}
-            {message && <DialogDescription className="text-gray-700 wrap-break-word">{message}</DialogDescription>}
-                      {content ? (
-                        <div className="text-gray-700 wrap-break-word">{content}</div>
-                      ) : (
-                        message && <DialogDescription className="text-gray-700 wrap-break-word">{message}</DialogDescription>
-                      )}
+            {content ? (
+              <div className="text-gray-700 break-words">{content}</div>
+            ) : (
+              message && <DialogDescription className="text-gray-700 break-words">{message}</DialogDescription>
+            )}
           </DialogHeader>
           <DialogFooter>
             {!single && (

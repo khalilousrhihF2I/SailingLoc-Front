@@ -1,7 +1,7 @@
 
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Anchor, Shield, Users, Award, TrendingUp, Heart, Linkedin, Mail } from 'lucide-react';
+import { Anchor, Shield, Users, Award, TrendingUp, Heart, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import { Page } from '../types/navigation';
 
 interface AboutPageProps {
@@ -189,9 +189,25 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                     </div>
                   </div>
 
+                  {/* Contact Details */}
+                  <div className="space-y-2 mb-6 text-sm">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin size={16} className="text-ocean-600 shrink-0" />
+                      <span>44 Avenue François Mitterrand, 77500 Chelles</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Phone size={16} className="text-ocean-600 shrink-0" />
+                      <a href="tel:+33773632345" className="hover:text-ocean-600 transition-colors">07 73 63 23 45</a>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Mail size={16} className="text-ocean-600 shrink-0" />
+                      <a href="mailto:contact@sailingloc.com" className="hover:text-ocean-600 transition-colors">contact@sailingloc.com</a>
+                    </div>
+                  </div>
+
                   <div className="flex gap-3 justify-center md:justify-start">
                     <a
-                      href="https://www.linkedin.com"
+                      href="https://www.linkedin.com/in/khalil-ousrhir-9130bb226"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -199,13 +215,13 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                       <Linkedin size={18} />
                       LinkedIn
                     </a>
-                    <button
-                      onClick={() => onNavigate('contact')}
+                    <a
+                      href="tel:+33773632345"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
                     >
-                      <Mail size={18} />
-                      Contact
-                    </button>
+                      <Phone size={18} />
+                      Appeler
+                    </a>
                   </div>
                 </div>
               </div>
@@ -280,13 +296,40 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
 
       {/* Contact Section */}
       <section className="py-16 bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-gray-900 mb-4">Une question ?</h2>
-          <p className="text-gray-600 mb-8">
-            Notre équipe est à votre écoute pour répondre à toutes vos questions 
-            et vous accompagner dans votre expérience SailingLoc.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-gray-900 mb-4">Nous contacter</h2>
+            <p className="text-gray-600">
+              Notre équipe est à votre écoute pour répondre à toutes vos questions 
+              et vous accompagner dans votre expérience SailingLoc.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-ocean-100 rounded-full mb-4">
+                <MapPin className="text-ocean-600" size={24} />
+              </div>
+              <h4 className="text-gray-900 mb-2">Adresse</h4>
+              <p className="text-gray-600 text-sm">44 Avenue François Mitterrand<br />77500 Chelles, France</p>
+            </Card>
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-ocean-100 rounded-full mb-4">
+                <Phone className="text-ocean-600" size={24} />
+              </div>
+              <h4 className="text-gray-900 mb-2">Téléphone</h4>
+              <a href="tel:+33773632345" className="text-ocean-600 hover:text-ocean-700 transition-colors">07 73 63 23 45</a>
+            </Card>
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-ocean-100 rounded-full mb-4">
+                <Mail className="text-ocean-600" size={24} />
+              </div>
+              <h4 className="text-gray-900 mb-2">Email</h4>
+              <a href="mailto:contact@sailingloc.com" className="text-ocean-600 hover:text-ocean-700 transition-colors">contact@sailingloc.com</a>
+            </Card>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               variant="primary"
               onClick={() => onNavigate('contact')}

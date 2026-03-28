@@ -26,7 +26,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
     let mounted = true;
     const load = async () => {
       try {
-        console.log(loading);
         setLoading(true);
         const data = await homeService.getHome();
         if (mounted) setHomeData(data);

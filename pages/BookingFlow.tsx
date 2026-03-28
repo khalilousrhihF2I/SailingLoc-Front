@@ -199,12 +199,12 @@ export function BookingFlow({
     try {
       let u = currentUser;
       if (!u) {
+        // Try to get user from localStorage or API
         u = await authService.getCurrentUser();
         if (u) {
           setCurrentUser(u);
         }
       }
-      console.log('Current user at payment success:', u);
 
       if (!u || !u.id) {
         // If still no user after trying to fetch, check if we have account data from registration
@@ -549,4 +549,3 @@ export function BookingFlow({
     </div>
   );
 }
-

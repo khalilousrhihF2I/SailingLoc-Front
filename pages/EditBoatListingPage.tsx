@@ -402,7 +402,7 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4" >
 
-        <div style={{ width: '100%', maxWidth: '28rem' }}>
+        <div className="w-full max-w-md">
           <Card className="w-full p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-red-600 text-2xl">⚠</span>

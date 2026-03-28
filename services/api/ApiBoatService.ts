@@ -3,7 +3,7 @@
  * Communique avec l'API .NET 8 pour les opérations sur les bateaux
  */
 
-import { IBoatService, Boat, BoatFilters, CreateBoatDto, UpdateBoatDto } from '../interfaces/IBoatService';
+import { IBoatService, Boat, BoatFilters, CreateBoatDto, UpdateBoatDto, PaginatedResult } from '../interfaces/IBoatService';
 import { apiClient } from '../../lib/apiClient';
 import { logApiOperation } from '../../config/apiMode';
 
@@ -19,7 +19,7 @@ export class ApiBoatService implements IBoatService {
     { value: 'all', label: 'Tous les bateaux' }
   ];
 
-  async getBoats(filters?: BoatFilters): Promise<Boat[]> {
+  async getBoats(filters?: BoatFilters): Promise<PaginatedResult<Boat>> {
     logApiOperation('boats', 'getBoats', filters);
     
     // Construire les query params pour les filtres
@@ -33,19 +33,27 @@ export class ApiBoatService implements IBoatService {
       if (filters.capacityMin !== undefined) queryParams.append('capacityMin', filters.capacityMin.toString());
       if (filters.startDate) queryParams.append('startDate', filters.startDate);
       if (filters.endDate) queryParams.append('endDate', filters.endDate);
+      if (filters.page !== undefined) queryParams.append('page', filters.page.toString());
+      if (filters.pageSize !== undefined) queryParams.append('pageSize', filters.pageSize.toString());
     }
     
     const query = queryParams.toString();
     const url = query ? `${this.endpoint}?${query}` : this.endpoint;
     
-    const response = await apiClient.get<Boat[]>(url);
+    const response = await apiClient.get<PaginatedResult<Boat>>(url);
     
     if (response.error) {
       console.error('Error fetching boats:', response.error);
-      return [];
+      return { items: [], totalCount: 0, page: 1, pageSize: 20, totalPages: 0 };
+    }
+
+    // Handle both paginated and legacy array responses
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return { items: data, totalCount: data.length, page: 1, pageSize: data.length, totalPages: 1 };
     }
     
-    return response.data || [];
+    return data || { items: [], totalCount: 0, page: 1, pageSize: 20, totalPages: 0 };
   }
 
   async getBoatById(id: number): Promise<Boat | null> {

@@ -28,7 +28,6 @@ export function BoatCard({ boat, onClick }: BoatCardProps) {
   };
 
   const handleClick = () => {
-    console.log('BoatCard clicked for boat:', boat.id);
     onClick();
   };
 
@@ -50,23 +49,23 @@ export function BoatCard({ boat, onClick }: BoatCardProps) {
         
         <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
           <div className="flex items-center gap-1">
-            <MapPin size={16} />
+            <MapPin size={16} aria-hidden="true" />
             <span>{boat.location}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Users size={16} />
+            <Users size={16} aria-hidden="true" />
             <span>{boat.capacity} pers.</span>
           </div>
         </div>
         
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 text-sm">
-            <Star size={16} className="text-orange-500 fill-orange-500" />
-            <span className="text-gray-900">{boat.rating}</span>
-            <span className="text-gray-500">({boat.reviews})</span>
+          <div className="flex items-center gap-1 text-sm" aria-label={`Note ${boat.rating} sur 5, ${boat.reviews} avis`}>
+            <Star size={16} className="text-orange-500 fill-orange-500" aria-hidden="true" />
+            <span className="text-gray-900" aria-hidden="true">{boat.rating}</span>
+            <span className="text-gray-500" aria-hidden="true">({boat.reviews})</span>
           </div>
           
-          <div className="text-right">
+          <div className="text-right" aria-label={`${boat.price} euros par jour`}>
             <div className="text-ocean-600">
               <span className="text-xl">{boat.price}€</span>
               <span className="text-sm text-gray-500">/jour</span>

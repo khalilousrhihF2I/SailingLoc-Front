@@ -69,11 +69,9 @@ export function DestinationsPage({ onNavigate }: DestinationsPageProps) {
       {/* Hero Section */}
       <div className="relative bg-ocean-900 text-white py-20">
         <div 
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-30 bg-cover bg-center"
           style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1733272967076-3a2ce81226e4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZWRpdGVycmFuZWFuJTIwY29hc3QlMjBzYWlsaW5nfGVufDF8fHx8MTc2NDI1NTMzNXww&ixlib=rb-4.1.0&q=80&w=1080)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            backgroundImage: 'url(https://images.unsplash.com/photo-1733272967076-3a2ce81226e4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZWRpdGVycmFuZWFuJTIwY29hc3QlMjBzYWlsaW5nfGVufDF8fHx8MTc2NDI1NTMzNXww&ixlib=rb-4.1.0&q=80&w=1080)'
           }}
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,8 +163,8 @@ export function DestinationsPage({ onNavigate }: DestinationsPageProps) {
                 const boatsCount = destination.boatCount ?? (Array.isArray((destination as any).boats) ? (destination as any).boats.length : ((destination as any).boats ?? 0));
 
                 return (
-                  <Card key={destination.id} hover className="overflow-hidden cursor-pointer group">
-                    <div className="relative h-64">
+                  <Card key={destination.id} hover className="overflow-hidden cursor-pointer group flex flex-col h-full">
+                    <div className="relative h-64 shrink-0">
                       <ImageWithFallback
                         src={destination.image}
                         alt={destination.name}
@@ -197,21 +195,21 @@ export function DestinationsPage({ onNavigate }: DestinationsPageProps) {
                       </div>
                     </div>
 
-                    <div className="p-6">
-                      <p className="text-gray-600 mb-4">{destination.description}</p>
+                    <div className="p-6 flex flex-col flex-1">
+                      <p className="text-gray-600 mb-4 line-clamp-2 h-12">{destination.description}</p>
 
                       <div className="mb-4">
                         <div className="text-sm text-gray-500 mb-2">Meilleure période :</div>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-2 flex-wrap h-14 overflow-hidden">
                           {months.map((month: string, idx: number) => (
                             <Badge key={`${destination.id}-month-${idx}`} variant="default">{month}</Badge>
                           ))}
                         </div>
                       </div>
 
-                      <div className="mb-4 height-bc">
+                      <div className="mb-4">
                         <div className="text-sm text-gray-500 mb-2">À découvrir :</div>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-2 flex-wrap h-14 overflow-hidden">
                           {highlights.slice(0, 3).map((highlight: string, idx: number) => (
                             <Badge key={`${destination.id}-hl-${idx}`} variant="default">{highlight}</Badge>
                           ))}
@@ -221,10 +219,12 @@ export function DestinationsPage({ onNavigate }: DestinationsPageProps) {
                         </div>
                       </div>
 
-                      <Button variant="primary" fullWidth onClick={() => onNavigate('search', { destination: destination.name })}>
-                        <Search size={18} />
-                        Voir les bateaux
-                      </Button>
+                      <div className="mt-auto">
+                        <Button variant="primary" fullWidth onClick={() => onNavigate('search', { destination: destination.name })}>
+                          <Search size={18} />
+                          Voir les bateaux
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 );

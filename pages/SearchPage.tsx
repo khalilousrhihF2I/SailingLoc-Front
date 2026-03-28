@@ -5,6 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Badge } from '../components/ui/Badge';
+import { BoatCardSkeleton } from '../components/ui/Skeletons';
+import { ErrorRetry } from '../components/ui/ErrorRetry';
 import { boatService, destinationService } from '../services/ServiceFactory';
 import { useEffect } from 'react';
 import { Page } from '../types/navigation';
@@ -31,17 +33,19 @@ export function SearchPage({ onNavigate, initialFilters = {} }: SearchPageProps)
   const [boatTypesState, setBoatTypesState] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
+    setError(null);
     Promise.all([
       boatService.getBoats(),
       destinationService.getAllDestinations()
     ])
       .then(([boatsResp, destResp]: any) => {
         if (!mounted) return;
-        const boatsArray = Array.isArray(boatsResp) ? boatsResp : [];
+        const boatsArray = Array.isArray(boatsResp) ? boatsResp : (boatsResp?.items ? boatsResp.items : []);
         const destArray = Array.isArray(destResp) ? destResp : [];
 
         const normalizeBoat = (b: any) => {
@@ -85,7 +89,7 @@ export function SearchPage({ onNavigate, initialFilters = {} }: SearchPageProps)
           semirigid: 'Semi-rigides'
         };
 
-        const derivedTypes = Array.from(new Set(normalized.map(b => b.type).filter(Boolean)));
+        const derivedTypes = Array.from(new Set(normalized.map((b: any) => b.type).filter(Boolean)));
         const types = [
           { value: 'all', label: 'Tous' },
           ...derivedTypes.map((t: any) => ({ value: t, label: TYPE_LABELS[t] || String(t).charAt(0).toUpperCase() + String(t).slice(1) }))
@@ -103,7 +107,7 @@ export function SearchPage({ onNavigate, initialFilters = {} }: SearchPageProps)
       });
 
     return () => { mounted = false; };
-  }, []);
+  }, [retryKey]);
 
   const filteredBoats = boats.filter(boat => {
     if (filters.location && !boat.location.toLowerCase().includes(filters.location.toLowerCase())) {
@@ -308,11 +312,13 @@ export function SearchPage({ onNavigate, initialFilters = {} }: SearchPageProps)
 
             {/* Boats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {loading && (
-                <div className="col-span-1 md:col-span-2 bg-white rounded-xl p-6 text-center shadow-sm">Chargement des bateaux...</div>
-              )}
+              {loading && Array.from({ length: 6 }).map((_, i) => (
+                <BoatCardSkeleton key={i} />
+              ))}
               {!loading && error && (
-                <div className="col-span-1 md:col-span-2 bg-white rounded-xl p-6 text-center shadow-sm text-red-600">Erreur: {error}</div>
+                <div className="col-span-1 md:col-span-2">
+                  <ErrorRetry message={error} onRetry={() => setRetryKey(k => k + 1)} />
+                </div>
               )}
               {!loading && !error && filteredBoats.map((boat) => (
                 <BoatCard

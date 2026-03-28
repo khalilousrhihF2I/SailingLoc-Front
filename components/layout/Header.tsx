@@ -1,5 +1,6 @@
 import  { useState } from 'react';
-import { Anchor, Menu, X, User } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, User } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Page } from '../../types/navigation';
 
@@ -9,81 +10,76 @@ interface HeaderProps {
   onNavigate: (page: Page) => void;
 }
 
-export function Header({ isLoggedIn = false, userType = null, onNavigate }: HeaderProps) {
+export function Header({ isLoggedIn = false, userType = null, onNavigate: _onNavigate }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const dashboardPath = userType === 'owner' ? '/tableau-de-bord/proprietaire'
+    : userType === 'admin' ? '/admin'
+    : '/tableau-de-bord/locataire';
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <button 
-            onClick={() => onNavigate('home')}
+          <Link
+            to="/"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            aria-label="SailingLoc - Accueil"
           >
-            <div className="w-10 h-10 bg-ocean-600 rounded-lg flex items-center justify-center">
-              <Anchor className="text-white" size={24} />
-            </div>
-            <span className="text-xl text-ocean-900 hidden sm:block">SailingLoc</span>
-          </button>
+            <img src="/logos/logo-icon-only.PNG" alt="" className="w-10 h-9 rounded-lg object-contain" aria-hidden="true" />
+            <img src="/logos/logo-text-only.PNG" alt="" className="h-4 rounded-lg object-contain" aria-hidden="true" />
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <button 
-              onClick={() => onNavigate('search')}
+          <nav className="hidden md:flex items-center gap-6" aria-label="Navigation principale">
+            <Link
+              to="/bateaux"
               className="text-gray-700 hover:text-ocean-600 transition-colors"
+              aria-current={location.pathname === '/bateaux' ? 'page' : undefined}
             >
               Rechercher un bateau
-            </button>
-            <button 
-              onClick={() => onNavigate('destinations')}
+            </Link>
+            <Link
+              to="/destinations"
               className="text-gray-700 hover:text-ocean-600 transition-colors"
+              aria-current={location.pathname === '/destinations' ? 'page' : undefined}
             >
               Destinations
-            </button>
-            <button 
-              onClick={() => onNavigate('about')}
+            </Link>
+            <Link
+              to="/a-propos"
               className="text-gray-700 hover:text-ocean-600 transition-colors"
+              aria-current={location.pathname === '/a-propos' ? 'page' : undefined}
             >
               À propos
-            </button>
+            </Link>
           </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-3">
             {!isLoggedIn ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onNavigate('login')}
-                  className="hidden sm:inline-flex"
-                >
-                  Connexion
-                </Button>
-                <Button 
-                  variant="primary" 
-                  size="sm"
-                  onClick={() => onNavigate('register')}
-                >
-                  Créer un compte
-                </Button>
+                <Link to="/connexion" className="hidden sm:inline-flex">
+                  <Button variant="ghost" size="sm" tabIndex={-1}>
+                    Connexion
+                  </Button>
+                </Link>
+                <Link to="/inscription">
+                  <Button variant="primary" size="sm" tabIndex={-1}>
+                    Créer un compte
+                  </Button>
+                </Link>
               </>
             ) : (
               <>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => {
-                    if (userType === 'owner') onNavigate('owner-dashboard');
-                    else if (userType === 'admin') onNavigate('admin-dashboard');
-                    else onNavigate('renter-dashboard');
-                  }}
-                  className="hidden sm:inline-flex"
-                >
-                  <User size={18} />
-                  Mon compte
-                </Button>
+                <Link to={dashboardPath} className="hidden sm:inline-flex">
+                  <Button variant="ghost" size="sm" tabIndex={-1}>
+                    <User size={18} aria-hidden="true" />
+                    Mon compte
+                  </Button>
+                </Link>
               </>
             )}
 
@@ -91,64 +87,68 @@ export function Header({ isLoggedIn = false, userType = null, onNavigate }: Head
             <button
               className="md:hidden p-2 text-gray-600 hover:text-ocean-600"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
             >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {mobileMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
+          <nav id="mobile-menu" className="md:hidden py-4 border-t border-gray-200" aria-label="Menu mobile">
             <div className="flex flex-col gap-3">
-              <button 
-                onClick={() => { onNavigate('search'); setMobileMenuOpen(false); }}
+              <Link
+                to="/bateaux"
+                onClick={() => setMobileMenuOpen(false)}
                 className="text-left px-4 py-2 text-gray-700 hover:bg-ocean-50 rounded-lg transition-colors"
               >
                 Rechercher un bateau
-              </button>
-              <button 
-                onClick={() => { onNavigate('destinations'); setMobileMenuOpen(false); }}
+              </Link>
+              <Link
+                to="/destinations"
+                onClick={() => setMobileMenuOpen(false)}
                 className="text-left px-4 py-2 text-gray-700 hover:bg-ocean-50 rounded-lg transition-colors"
               >
                 Destinations
-              </button>
-              <button 
-                onClick={() => { onNavigate('about'); setMobileMenuOpen(false); }}
+              </Link>
+              <Link
+                to="/a-propos"
+                onClick={() => setMobileMenuOpen(false)}
                 className="text-left px-4 py-2 text-gray-700 hover:bg-ocean-50 rounded-lg transition-colors"
               >
                 À propos
-              </button>
+              </Link>
               {!isLoggedIn ? (
                 <>
-                  <button 
-                    onClick={() => { onNavigate('login'); setMobileMenuOpen(false); }}
+                  <Link
+                    to="/connexion"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="text-left px-4 py-2 text-gray-700 hover:bg-ocean-50 rounded-lg transition-colors"
                   >
                     Connexion
-                  </button>
-                  <button 
-                    onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }}
+                  </Link>
+                  <Link
+                    to="/inscription"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="text-left px-4 py-2 text-ocean-600 hover:bg-ocean-50 rounded-lg transition-colors"
                   >
                     Créer un compte
-                  </button>
+                  </Link>
                 </>
               ) : (
-                <button 
-                  onClick={() => {
-                    if (userType === 'owner') onNavigate('owner-dashboard');
-                    else if (userType === 'admin') onNavigate('admin-dashboard');
-                    else onNavigate('renter-dashboard');
-                    setMobileMenuOpen(false);
-                  }}
+                <Link
+                  to={dashboardPath}
+                  onClick={() => setMobileMenuOpen(false)}
                   className="text-left px-4 py-2 text-gray-700 hover:bg-ocean-50 rounded-lg transition-colors"
                 >
                   Mon compte
-                </button>
+                </Link>
               )}
             </div>
-          </div>
+          </nav>
         )}
       </div>
     </header>

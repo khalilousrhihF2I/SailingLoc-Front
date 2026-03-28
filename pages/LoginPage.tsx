@@ -1,5 +1,5 @@
 import  { useState } from 'react';
-import { Mail, Lock, Anchor } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -18,6 +18,11 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  const emailError = emailTouched && !email ? 'L\'adresse email est requise' : emailTouched && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'Adresse email invalide' : '';
+  const passwordError = passwordTouched && !password ? 'Le mot de passe est requis' : '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +35,6 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
 
     try {
       const resp = await authService.login({ email, password });
-      console.log('Login response:', resp);
       if (!resp.success) {
         setError(resp.message || 'Email ou mot de passe incorrect');
         return;
@@ -55,9 +59,9 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
   const fillDemoAccount = (type: 'renter' | 'owner' | 'admin') => {
     setError('');
     const accounts = {
-      renter: { email: 'renter@example.com', password: 'Demo123@@' },
-      owner: { email: 'owner@example.com', password: 'Demo123@@' },
-      admin: { email: 'admin@sailingloc.com', password: 'Demo123@@' }
+      renter: { email: 'Renter@local.test', password: 'Admin123' },
+      owner: { email: 'Owner@local.test', password: 'Admin123' },
+      admin: { email: 'Admin@local.test', password: 'Admin123' }
     };
     setEmail(accounts[type].email);
     setPassword(accounts[type].password);
@@ -65,11 +69,9 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div style={{ width: '100%', maxWidth: '28rem' }}>
+        <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-ocean-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Anchor className="text-white" size={32} />
-          </div>
+          <img src="/logos/logo-icon-only.PNG" alt="SailingLoc" className="w-16 h-16 mx-auto mb-4 rounded-xl object-contain" />
           <h2 className="text-gray-900 mb-2">Connexion</h2>
           <p className="text-gray-600">Accédez à votre compte SailingLoc</p>
         </div>
@@ -86,7 +88,11 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
               placeholder="votre@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
               icon={<Mail size={20} />}
+              autoComplete="email"
+              required
+              error={emailError}
             />
 
             <Input
@@ -95,7 +101,11 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onBlur={() => setPasswordTouched(true)}
               icon={<Lock size={20} />}
+              autoComplete="current-password"
+              required
+              error={passwordError}
             />
 
             <div className="flex items-center justify-between">
@@ -172,13 +182,10 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
                 <span className="text-xs text-ocean-600 group-hover:text-ocean-700">admin@sailingloc.com</span>
               </button>
             </div>
-            <p className="mt-3 text-xs text-ocean-600">
-              Mot de passe : <b>Demo123@@</b>
-            </p>
+           
           </div>
-        </Card>
+        </Card> 
       </div>
     </div>
   );
 }
-

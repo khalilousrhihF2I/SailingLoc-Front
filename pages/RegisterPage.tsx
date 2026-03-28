@@ -1,5 +1,5 @@
 import  { useState } from 'react';
-import { Mail, Lock, User, Phone, Anchor } from 'lucide-react';
+import { Mail, Lock, User, Phone, Ship } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -121,7 +121,6 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
 
       // On success, ensure the user is authenticated before proceeding
       try {
-        debugger;
         let authResp = resp as any;
 
         // If register didn't return user/tokens, attempt to login with provided credentials
@@ -155,11 +154,9 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div style={{ width: '100%', maxWidth: '42rem', margin: '0 auto' }}>
+        <div className="w-full max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-ocean-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Anchor className="text-white" size={32} />
-          </div>
+          <img src="/logos/logo-icon-only.PNG" alt="SailingLoc" className="w-16 h-16 mx-auto mb-4 rounded-xl object-contain" />
           <h2 className="text-gray-900 mb-2">Créer un compte</h2>
           <p className="text-gray-600">Rejoignez la communauté SailingLoc</p>
         </div>
@@ -193,7 +190,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
               }`}
             >
               <div className="text-center">
-                <Anchor className="mx-auto mb-2 text-ocean-600" size={32} />
+                <Ship className="mx-auto mb-2 text-ocean-600" size={32} />
                 <div className="text-gray-900">Propriétaire</div>
                 <div className="text-sm text-gray-600 mt-1">Je veux louer mon bateau</div>
               </div>
@@ -213,6 +210,8 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 icon={<User size={20} />}
+                autoComplete="given-name"
+                required
               />
 
               <Input
@@ -222,6 +221,8 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 icon={<User size={20} />}
+                autoComplete="family-name"
+                required
               />
             </div>
 
@@ -232,6 +233,8 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               icon={<Mail size={20} />}
+              autoComplete="email"
+              required
             />
 
             <Input
@@ -241,6 +244,8 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
               value={formData.phoneNumber}
               onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
               icon={<Phone size={20} />}
+              autoComplete="tel"
+              required
             />
 
             <Input
@@ -250,6 +255,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
               value={formData.birthDate}
               onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
               icon={<User size={20} />}
+              autoComplete="bday"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -259,6 +265,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 placeholder="12 Rue de la Mer"
                 value={formData.address.street}
                 onChange={(e) => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
+                autoComplete="street-address"
               />
 
               <Input
@@ -267,6 +274,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 placeholder="Bordeaux"
                 value={formData.address.city}
                 onChange={(e) => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })}
+                autoComplete="address-level2"
               />
 
               <Input
@@ -275,6 +283,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 placeholder="ile-de-France"
                 value={formData.address.state}
                 onChange={(e) => setFormData({ ...formData, address: { ...formData.address, state: e.target.value } })}
+                autoComplete="address-level1"
               />
 
               <Input
@@ -283,6 +292,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 placeholder="33000"
                 value={formData.address.postalCode}
                 onChange={(e) => setFormData({ ...formData, address: { ...formData.address, postalCode: e.target.value } })}
+                autoComplete="postal-code"
               />
 
               <Input
@@ -291,6 +301,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 placeholder="France"
                 value={formData.address.country}
                 onChange={(e) => setFormData({ ...formData, address: { ...formData.address, country: e.target.value } })}
+                autoComplete="country-name"
               />
             </div>
 
@@ -301,6 +312,9 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               icon={<Lock size={20} />}
+              autoComplete="new-password"
+              required
+              error={formData.password && formData.password.length < 8 ? 'Le mot de passe doit contenir au moins 8 caractères' : ''}
             />
 
             <Input
@@ -310,6 +324,9 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               icon={<Lock size={20} />}
+              autoComplete="new-password"
+              required
+              error={formData.confirmPassword && formData.confirmPassword !== formData.password ? 'Les mots de passe ne correspondent pas' : ''}
             />
 
             <div className="flex items-start gap-2">

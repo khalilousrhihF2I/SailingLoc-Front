@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { handleLogout } from '../utils/handleLogout';
-import { Users, Ship, Calendar, DollarSign, AlertCircle, Settings, LogOut, X, Search } from 'lucide-react';
+import { Users, Ship, Calendar, DollarSign, AlertCircle, Settings, LogOut, X, Search, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import AdminUsersPage from './AdminUsersPage';
 import { Badge } from '../components/ui/Badge';
@@ -97,7 +97,7 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                       : 'text-gray-700 hover:bg-gray-50'
                     }`}
                 >
-                  <DollarSign size={20} />
+                  <LayoutDashboard size={20} />
                   <span>Vue d'ensemble</span>
                 </button>
                 <button
@@ -117,7 +117,7 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                       : 'text-gray-700 hover:bg-gray-50'
                     }`}
                 >
-                  <Users size={20} />
+                  <ShieldCheck size={20} />
                   <span>Administrateurs</span>
                 </button>
                 <button
@@ -432,18 +432,19 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                           <td className="py-3 px-4">
                             <Badge
                               variant={
-                                booking.status === 'confirmed'
+                                booking.status === 'confirmed' || booking.status === 'Confirmed'
                                   ? 'success'
-                                  : booking.status === 'pending'
+                                  : booking.status === 'pending' || booking.status === 'Pending'
                                     ? 'warning'
                                     : 'default'
                               }
                               size="sm"
                             >
-                              {booking.status === 'confirmed' && 'Confirmée'}
-                              {booking.status === 'cancelled' && 'Annulée'}
-                              {booking.status === 'pending' && 'En attente'}
-                              {booking.status === 'completed' && 'Terminée'}
+                              {booking.status === 'confirmed' || booking.status === 'Confirmed' ? 'Confirmée'
+                                : booking.status === 'cancelled' || booking.status === 'Cancelled' ? 'Annulée'
+                                : booking.status === 'pending' || booking.status === 'Pending' ? 'En attente'
+                                : booking.status === 'completed' || booking.status === 'Completed' ? 'Terminée'
+                                : booking.status || 'Inconnu'}
                             </Badge>
                           </td>
                         </tr>

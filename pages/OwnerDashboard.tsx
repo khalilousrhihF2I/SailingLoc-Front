@@ -1248,7 +1248,6 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
                     boatId={selectedBoatForCalendar} 
                     onUpdate={() => {
                       // Rafraîchir les données si nécessaire
-                      console.log('Disponibilités mises à jour');
                     }}
                   />
                 </Card>

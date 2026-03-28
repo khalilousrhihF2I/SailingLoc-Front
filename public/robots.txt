@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /tableau-de-bord
+Disallow: /reservation
+Disallow: /proprietaire
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /mot-de-passe-oublie
+
+Sitemap: https://sailingloc-front.azurestaticapps.net/sitemap.xml

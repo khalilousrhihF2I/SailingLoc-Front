@@ -43,8 +43,8 @@ export function Alert({ type = 'info', children, onClose }: AlertProps) {
   const Icon = config.icon;
 
   return (
-    <div className={`flex items-start gap-3 p-4 rounded-lg border mt-2 mb-2 ${config.bg} ${config.border}`}>
-      <Icon className={`shrink-0 ${config.iconColor}`} size={20} />
+    <div role="alert" aria-live="assertive" className={`flex items-start gap-3 p-4 rounded-lg border mt-2 mb-2 ${config.bg} ${config.border}`}>
+      <Icon className={`shrink-0 ${config.iconColor}`} size={20} aria-hidden="true" />
       <div className={`flex-1 ${config.text}`}>
         {children}
       </div>

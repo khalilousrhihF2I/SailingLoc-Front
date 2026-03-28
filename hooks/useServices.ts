@@ -15,6 +15,7 @@ import { Booking, BookingFilters } from '../services/interfaces/IBookingService'
  */
 export function useBoats(filters?: BoatFilters) {
   const [boats, setBoats] = useState<Boat[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,8 +24,9 @@ export function useBoats(filters?: BoatFilters) {
       try {
         setLoading(true);
         setError(null);
-        const data = await boatService.getBoats(filters);
-        setBoats(data);
+        const result = await boatService.getBoats(filters);
+        setBoats(result.items);
+        setTotalCount(result.totalCount);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load boats');
       } finally {
@@ -35,7 +37,7 @@ export function useBoats(filters?: BoatFilters) {
     loadBoats();
   }, [filters]);
 
-  return { boats, loading, error, refetch: () => boatService.getBoats(filters) };
+  return { boats, totalCount, loading, error, refetch: () => boatService.getBoats(filters) };
 }
 
 /**

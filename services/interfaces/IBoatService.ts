@@ -23,6 +23,9 @@ export interface Boat {
   // primary image url (deprecated if you use `images` array)
   image?: string;
 
+  // URL-friendly slug
+  slug?: string;
+
   // multiple images
   images?: {
     id: number;
@@ -93,6 +96,16 @@ export interface BoatFilters {
   capacityMin?: number;
   startDate?: string;
   endDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface CreateBoatDto {
@@ -119,9 +132,9 @@ export interface UpdateBoatDto extends Partial<CreateBoatDto> {
 
 export interface IBoatService {
   /**
-   * Récupère tous les bateaux avec filtres optionnels
+   * Récupère tous les bateaux avec filtres optionnels (paginé)
    */
-  getBoats(filters?: BoatFilters): Promise<Boat[]>;
+  getBoats(filters?: BoatFilters): Promise<PaginatedResult<Boat>>;
   
   /**
    * Récupère un bateau par son ID
