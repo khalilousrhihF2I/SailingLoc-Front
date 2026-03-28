@@ -60,7 +60,7 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
       <div className="bg-gradient-to-br from-ocean-600 to-ocean-800 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl mb-6">Comment ça marche ?</h1>
-          <p className="text-lg md:text-xl text-ocean-100 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-ocean-100 max-w-2xl mx-auto text-center">
             Louer un bateau ou proposer le vôtre sur SailingLoc est simple, rapide et sécurisé.
           </p>
         </div>
@@ -74,18 +74,20 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
             <p className="text-gray-600 text-lg">Trouvez et réservez votre bateau en 4 étapes</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pt-6">
             {renterSteps.map((step, index) => (
-              <Card key={index} className="p-8 text-center relative hover:shadow-lg transition-shadow">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-ocean-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+              <div key={index} className="relative">
+                <div className="absolute -top-5 left-6 z-10 w-10 h-10 bg-ocean-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
                   {index + 1}
                 </div>
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-ocean-100 rounded-full mb-6 mt-2">
-                  <step.icon className="text-ocean-600" size={32} />
-                </div>
-                <h3 className="text-gray-900 mb-3 font-semibold">{step.title}</h3>
-                <p className="text-gray-600 text-sm">{step.description}</p>
-              </Card>
+                <Card className="p-8 pt-10 text-center hover:shadow-lg transition-shadow">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-ocean-100 rounded-full mb-6">
+                    <step.icon className="text-ocean-600" size={32} />
+                  </div>
+                  <h3 className="text-gray-900 mb-3 font-semibold">{step.title}</h3>
+                  <p className="text-gray-600 text-sm">{step.description}</p>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -99,18 +101,20 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
             <p className="text-gray-600 text-lg">Rentabilisez votre bateau en 4 étapes</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pt-6">
             {ownerSteps.map((step, index) => (
-              <Card key={index} className="p-8 text-center relative hover:shadow-lg transition-shadow">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-turquoise-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+              <div key={index} className="relative">
+                <div className="absolute -top-5 left-6 z-10 w-10 h-10 bg-turquoise-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
                   {index + 1}
                 </div>
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-turquoise-100 rounded-full mb-6 mt-2">
-                  <step.icon className="text-turquoise-600" size={32} />
-                </div>
-                <h3 className="text-gray-900 mb-3 font-semibold">{step.title}</h3>
-                <p className="text-gray-600 text-sm">{step.description}</p>
-              </Card>
+                <Card className="p-8 pt-10 text-center hover:shadow-lg transition-shadow">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-turquoise-100 rounded-full mb-6">
+                    <step.icon className="text-turquoise-600" size={32} />
+                  </div>
+                  <h3 className="text-gray-900 mb-3 font-semibold">{step.title}</h3>
+                  <p className="text-gray-600 text-sm">{step.description}</p>
+                </Card>
+              </div>
             ))}
           </div>
         </div>

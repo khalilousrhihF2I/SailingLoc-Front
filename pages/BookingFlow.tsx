@@ -39,6 +39,7 @@ export function BookingFlow({
     address: { street: '', city: '', state: '', postalCode: '', country: '' }
   });
   const [accountError, setAccountError] = useState('');
+  const [withSkipper, setWithSkipper] = useState(false);
 
   const [boat, setBoat] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,8 +100,9 @@ export function BookingFlow({
 
   const days = calculateDays();
   const subtotal = days * boat.price;
-  const serviceFee = subtotal * 0.1;
-  const total = subtotal + serviceFee;
+  const skipperFee = (withSkipper && boat.hasSkipper) ? days * (boat.skipperPrice || 0) : 0;
+  const serviceFee = (subtotal + skipperFee) * 0.1;
+  const total = subtotal + skipperFee + serviceFee;
   const bookingId = 'BK' + Date.now().toString(36).toUpperCase();
 
   // Handle Account Creation/Validation
@@ -239,6 +241,8 @@ export function BookingFlow({
         EndDate: new Date(endDate).toISOString(),
         DailyPrice: boat.price,
         ServiceFee: serviceFee,
+        WithSkipper: withSkipper,
+        SkipperFee: skipperFee,
         RenterId: u.id, // backend expects GUID — ensure your auth user id format matches
         RenterName: ((u as any).firstName || accountData.firstName) && ((u as any).lastName || accountData.lastName)
           ? `${(u as any).firstName || accountData.firstName} ${(u as any).lastName || accountData.lastName}`
@@ -520,8 +524,22 @@ export function BookingFlow({
                   <span className="text-gray-600">{boat.price}€ × {days} jours</span>
                   <span className="text-gray-900">{subtotal}€</span>
                 </div>
+                {boat.hasSkipper && (
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={withSkipper}
+                        onChange={(e) => setWithSkipper(e.target.checked)}
+                        className="rounded border-gray-300 text-ocean-600 focus:ring-ocean-500"
+                      />
+                      Option skipper ({boat.skipperPrice || 0}€/jour)
+                    </label>
+                    <span className="text-gray-900">{skipperFee}€</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Frais de service</span>
+                  <span className="text-gray-600">Frais de service (10%)</span>
                   <span className="text-gray-900">{serviceFee.toFixed(2)}€</span>
                 </div>
               </div>

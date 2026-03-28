@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useParams, useSearchParams, useLocation, Outlet } from 'react-router-dom';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { CookieBanner } from './components/layout/CookieBanner';
 import ModalProvider from './components/ui/ModalProvider';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
@@ -48,6 +49,7 @@ function AppLayout() {
         <Outlet />
       </main>
       <Footer onNavigate={navigate} />
+      <CookieBanner />
     </div>
   );
 }

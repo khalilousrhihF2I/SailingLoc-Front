@@ -56,6 +56,10 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
     image: '',
   });
 
+  // Option skipper
+  const [hasSkipper, setHasSkipper] = useState(false);
+  const [skipperPrice, setSkipperPrice] = useState('');
+
   // Étape 4: Équipements
   const [equipment, setEquipment] = useState<string[]>([]);
   const [newEquipment, setNewEquipment] = useState('');
@@ -138,6 +142,9 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
           description: boatData.description || '',
           image: boatData.image || '',
         });
+
+        setHasSkipper(!!(boatData as any).hasSkipper);
+        setSkipperPrice((boatData as any).skipperPrice != null ? String((boatData as any).skipperPrice) : '');
 
         // Prefill photos/images if available
         try {
@@ -347,6 +354,8 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
         country: location.country,
         destinationId: location.destinationId ?? undefined,
         price: parseFloat(details.price),
+        hasSkipper,
+        skipperPrice: hasSkipper ? parseFloat(skipperPrice) || 0 : 0,
         description: details.description,
         image: details.image || 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=800',
         equipment,
@@ -628,6 +637,33 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
                 required
               />
 
+              {/* Option skipper */}
+              <div className="p-4 bg-ocean-50 rounded-xl space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasSkipper}
+                    onChange={(e) => setHasSkipper(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500"
+                  />
+                  <div>
+                    <span className="text-gray-900 font-medium">Skipper disponible</span>
+                    <p className="text-sm text-gray-500">Proposez un skipper professionnel avec votre bateau</p>
+                  </div>
+                </label>
+                {hasSkipper && (
+                  <Input
+                    type="number"
+                    label="Prix du skipper par jour (€) *"
+                    placeholder="150"
+                    value={skipperPrice}
+                    onChange={(e) => setSkipperPrice(e.target.value)}
+                    icon={<Users size={20} />}
+                    required
+                  />
+                )}
+              </div>
+
               <div>
                 <label className="block mb-2 text-gray-700">Description *</label>
                 <textarea
@@ -870,6 +906,10 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
                   <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span className="text-gray-600">Prix :</span>
                     <span className="text-gray-900 font-bold">{details.price}€/jour</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-200 pb-2">
+                    <span className="text-gray-600">Skipper :</span>
+                    <span className="text-gray-900">{hasSkipper ? `Oui — ${skipperPrice}€/jour` : 'Non'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Équipements :</span>
