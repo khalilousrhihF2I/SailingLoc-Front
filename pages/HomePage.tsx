@@ -20,13 +20,11 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const { showConfirm } = useModal();
   const [homeData, setHomeData] = useState<HomeResponse | null>(null);
   const [popularDestinations, setPopularDestinations] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
-        setLoading(true);
         const data = await homeService.getHome();
         if (mounted) setHomeData(data);
         try {
@@ -37,8 +35,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
         }
       } catch (err) {
         console.error('Failed to load home data', err);
-      } finally {
-        if (mounted) setLoading(false);
       }
     };
 
