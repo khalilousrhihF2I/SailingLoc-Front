@@ -61,7 +61,7 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
     const accounts = {
       renter: { email: 'Renter@local.test', password: 'Admin123' },
       owner: { email: 'Owner@local.test', password: 'Admin123' },
-      admin: { email: 'Admin@local.test', password: 'Admin123' }
+      admin: { email: 'admin@local.test', password: 'Admin123' }
     };
     setEmail(accounts[type].email);
     setPassword(accounts[type].password);
@@ -155,7 +155,7 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
                   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                   <span>Locataire</span>
                 </span>
-                <span className="text-xs text-ocean-600 group-hover:text-ocean-700">renter@example.com</span>
+                <span className="text-xs text-ocean-600 group-hover:text-ocean-700">Renter@local.test</span>
               </button>
               
               <button
@@ -167,7 +167,7 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                   <span>Propriétaire</span>
                 </span>
-                <span className="text-xs text-ocean-600 group-hover:text-ocean-700">owner@example.com</span>
+                <span className="text-xs text-ocean-600 group-hover:text-ocean-700">Owner@local.test</span>
               </button>
               
               <button
@@ -179,7 +179,7 @@ export function LoginPage({ onLogin, onNavigate, pageData }: LoginPageProps) {
                   <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
                   <span>Administrateur</span>
                 </span>
-                <span className="text-xs text-ocean-600 group-hover:text-ocean-700">admin@sailingloc.com</span>
+                <span className="text-xs text-ocean-600 group-hover:text-ocean-700">admin@local.test</span>
               </button>
             </div>
            
