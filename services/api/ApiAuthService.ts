@@ -193,9 +193,10 @@ export class ApiAuthService implements IAuthService {
     
     // Appeler l'API pour invalider le token côté serveur
     const token = localStorage.getItem(this.TOKEN_KEY);
-    if (token) {
+    const refreshToken = localStorage.getItem(this.TOKEN_KEY + '_refresh');
+    if (token && refreshToken) {
       try {
-        await apiClient.post(`${this.endpoint}/logout`, {});
+        await apiClient.post(`${this.endpoint}/logout`, { refreshToken });
       } catch (err) {
         // ignore logout errors
       }

@@ -36,16 +36,29 @@ export class ApiAdminDashboardService implements IAdminDashboardService {
 
   async getBookings(): Promise<AdminBookingSummary[]> {
     logApiOperation('admin', 'getBookings');
-    const resp = await apiClient.get<AdminBookingSummary[]>(`${this.base}/bookings`);
+    const resp = await apiClient.get<any>(`${this.base}/bookings`);
     if (resp.error) throw new Error(resp.error);
-    return resp.data || [];
+    const data = resp.data;
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.items)) return data.items;
+    return [];
   }
 
   async getActivity(): Promise<AdminActivity[]> {
     logApiOperation('admin', 'getActivity');
-    const resp = await apiClient.get<AdminActivity[]>(`${this.base}/activity`);
+    const resp = await apiClient.get<any[]>(`${this.base}/activity`);
     if (resp.error) throw new Error(resp.error);
-    return resp.data || [];
+    const raw = resp.data || [];
+    return raw.map((a: any) => ({
+      type: a.type || '',
+      message: a.description || a.message || '',
+      date: a.occurredAt || a.date || '',
+      action: a.action,
+      userId: a.userId,
+      ip: a.ip,
+      description: a.description,
+      occurredAt: a.occurredAt,
+    }));
   }
 
   async getPaymentStats(): Promise<AdminPaymentsStats> {

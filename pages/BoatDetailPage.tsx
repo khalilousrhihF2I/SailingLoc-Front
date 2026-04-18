@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Modal } from '../components/ui/Modal';
+import { TablePagination } from '../components/ui/TablePagination';
 import { Page } from '../types/navigation';
 import { boatService, availabilityService } from '../services/ServiceFactory';
 
@@ -16,6 +17,8 @@ interface BoatDetailPageProps {
 export function BoatDetailPage({ boatId, onNavigate }: BoatDetailPageProps) {
   const [boat, setBoat] = useState<any | null>(null);
   const [boatReviews, setBoatReviews] = useState<any[]>([]);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const REVIEWS_PAGE_SIZE = 5;
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalIndex, setModalIndex] = useState<number | null>(null);
@@ -346,9 +349,9 @@ export function BoatDetailPage({ boatId, onNavigate }: BoatDetailPageProps) {
 
             {/* Reviews */}
             <Card className="p-6">
-              <h3 className="text-gray-900 mb-6">Avis des locataires</h3>
+              <h3 className="text-gray-900 mb-6">Avis des locataires ({boatReviews.length})</h3>
               <div className="space-y-6  mt-2">
-                {boatReviews.map((review: any) => (
+                {boatReviews.slice((reviewsPage - 1) * REVIEWS_PAGE_SIZE, reviewsPage * REVIEWS_PAGE_SIZE).map((review: any) => (
                   <div key={review.id} className="border-b border-gray-200 last:border-0 pb-6 last:pb-0">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-ocean-600 rounded-full flex items-center justify-center text-white shrink-0">
@@ -376,9 +379,17 @@ export function BoatDetailPage({ boatId, onNavigate }: BoatDetailPageProps) {
                   </div>
                 ))}
               </div>
+              {boatReviews.length > REVIEWS_PAGE_SIZE && (
+                <div className="mt-6">
+                  <TablePagination
+                    currentPage={reviewsPage}
+                    totalPages={Math.ceil(boatReviews.length / REVIEWS_PAGE_SIZE)}
+                    onPageChange={setReviewsPage}
+                    totalItems={boatReviews.length}
+                  />
+                </div>
+              )}
             </Card>
-
-            {/* Owner */}
             <Card className="p-6">
               <h3 className="text-gray-900 mb-4">Propriétaire</h3>
               <div className="flex items-center gap-4 mt-2">

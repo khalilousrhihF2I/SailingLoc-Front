@@ -1,5 +1,5 @@
 import  { useEffect, useState } from 'react';
-import { Ship, Calendar, TrendingUp, Plus, LogOut, Edit, Eye, User, Trash2, Slash, FileText } from 'lucide-react';
+import { Ship, Calendar, TrendingUp, Plus, LogOut, Edit, Eye, User, Trash2, Slash, FileText, Search, LayoutDashboard } from 'lucide-react';
 import { handleLogout } from '../utils/handleLogout';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -40,6 +40,10 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
   const [payments, setPayments] = useState<any[]>([]);
   const [bookingsPage, setBookingsPage] = useState(1);
   const [paymentsPage, setPaymentsPage] = useState(1);
+  const [boatsPage, setBoatsPage] = useState(1);
+  const [boatSearch, setBoatSearch] = useState('');
+  const [boatStatusFilter, setBoatStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [boatViewMode, setBoatViewMode] = useState<'card' | 'table'>('card');
   const OWNER_PAGE_SIZE = 10;
 
   useEffect(() => {
@@ -55,9 +59,10 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
         ]);
         if (!mounted) return;
         setStats(s);
-        setBoats(bts);
+        setBoats(Array.isArray(bts) ? bts : []);
         // map API DTO (PascalCase) to UI-friendly camelCase shape
-        const mappedBookings = (bks || []).map((bk: any) => mapOwnerBooking(bk));
+        const bksArr = Array.isArray(bks) ? bks : [];
+        const mappedBookings = bksArr.map((bk: any) => mapOwnerBooking(bk));
         setBookings(mappedBookings);
       } catch (err: any) {
         setError(err?.message || String(err));
@@ -84,7 +89,8 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
     setLoading(true);
     try {
       const bks = await ownerDashboardService.getBookings();
-      const mappedBookings = (bks || []).map((bk: any) => mapOwnerBooking(bk));
+      const bksArr = Array.isArray(bks) ? bks : [];
+      const mappedBookings = bksArr.map((bk: any) => mapOwnerBooking(bk));
       setBookings(mappedBookings);
       } catch (e: any) {
       setError(e?.message || String(e));
@@ -478,8 +484,88 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
                   </Button>
                 </div>
 
+                {/* Search, filter, view toggle */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
+                  <div className="w-full sm:w-72">
+                    <Input type="text" placeholder="Rechercher un bateau..." value={boatSearch} onChange={(e) => { setBoatSearch(e.target.value); setBoatsPage(1); }} icon={<Search size={18} />} />
+                  </div>
+                  <select value={boatStatusFilter} onChange={(e) => { setBoatStatusFilter(e.target.value as any); setBoatsPage(1); }} className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500">
+                    <option value="all">Tous les statuts</option>
+                    <option value="active">Actifs</option>
+                    <option value="inactive">Inactifs</option>
+                  </select>
+                  <div className="flex gap-1 ml-auto">
+                    <button onClick={() => setBoatViewMode('card')} className={`p-2 rounded-lg ${boatViewMode === 'card' ? 'bg-ocean-100 text-ocean-700' : 'text-gray-400 hover:bg-gray-100'}`} title="Vue carte"><Ship size={18} /></button>
+                    <button onClick={() => setBoatViewMode('table')} className={`p-2 rounded-lg ${boatViewMode === 'table' ? 'bg-ocean-100 text-ocean-700' : 'text-gray-400 hover:bg-gray-100'}`} title="Vue tableau"><LayoutDashboard size={18} /></button>
+                  </div>
+                </div>
+
+                {(() => {
+                  const filteredBoats = ownerBoats.filter(b => {
+                    if (boatStatusFilter === 'active' && !b.isActive) return false;
+                    if (boatStatusFilter === 'inactive' && b.isActive) return false;
+                    if (!boatSearch) return true;
+                    const s = boatSearch.toLowerCase();
+                    return String(b.name).toLowerCase().includes(s) || String(b.location || '').toLowerCase().includes(s) || String((b as any).type || '').toLowerCase().includes(s);
+                  });
+                  const totalPages = Math.ceil(filteredBoats.length / OWNER_PAGE_SIZE);
+                  const visibleBoats = filteredBoats.slice((boatsPage - 1) * OWNER_PAGE_SIZE, boatsPage * OWNER_PAGE_SIZE);
+
+                  return (
+                    <>
+                      {boatViewMode === 'table' ? (
+                        <Card className="overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="border-b border-gray-200">
+                                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bateau</th>
+                                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Localisation</th>
+                                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Prix</th>
+                                  <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                                  <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {visibleBoats.map(boat => (
+                                  <tr key={boat.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                    <td className="py-3 px-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                                          <ImageWithFallback src={boat.image || typeImageMap[(boat as any).type] || '/images/voiliers.png'} alt={boat.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div>
+                                          <div className="text-gray-900 font-medium">{boat.name}</div>
+                                          <div className="text-xs text-gray-500">{(boat as any).type || ''} {boat.reviews ? `\u2022 ${boat.reviews} avis` : ''}</div>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-sm text-gray-600">{boat.location}</td>
+                                    <td className="py-3 px-4 text-sm text-ocean-600 font-medium">{boat.price ?? 0}\u20AC/jour</td>
+                                    <td className="py-3 px-4 text-center">
+                                      {boat.isVerified === false ? <Badge variant="warning" size="sm">Non v\u00E9rifi\u00E9</Badge>
+                                        : <Badge variant={boat.isActive ? 'success' : 'default'} size="sm">{boat.isActive ? 'Actif' : 'Inactif'}</Badge>}
+                                    </td>
+                                    <td className="py-3 px-4 text-right">
+                                      {boat.isVerified === false ? (
+                                        <span className="text-xs text-yellow-700">En attente</span>
+                                      ) : (
+                                        <div className="flex items-center justify-end gap-1">
+                                          <Button variant="ghost" size="sm" onClick={() => onNavigate('boat-detail', { boatId: boat.id })}><Eye size={14} /></Button>
+                                          <Button variant="ghost" size="sm" onClick={() => onNavigate('edit-listing', { boatId: boat.id })}><Edit size={14} /></Button>
+                                        </div>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {visibleBoats.length === 0 && <div className="text-center py-8 text-gray-500 text-sm">Aucun bateau trouv\u00E9</div>}
+                          </div>
+                        </Card>
+                      ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {ownerBoats.map((boat) => (
+                  {visibleBoats.map((boat) => (
                     <Card key={boat.id} hover className="overflow-hidden">
                       <div className="relative h-48">
                         <ImageWithFallback
@@ -603,7 +689,13 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
                       </div>
                     </Card>
                   ))}
+                  {visibleBoats.length === 0 && <div className="text-center py-8 text-gray-500 text-sm">Aucun bateau trouvé</div>}
                 </div>
+                      )}
+                      <TablePagination currentPage={boatsPage} totalPages={totalPages} onPageChange={setBoatsPage} totalItems={filteredBoats.length} />
+                    </>
+                  );
+                })()}
               </div>
             )}
 

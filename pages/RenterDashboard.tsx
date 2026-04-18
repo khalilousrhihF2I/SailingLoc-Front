@@ -1,6 +1,6 @@
 import  { useEffect, useState } from 'react';
 import { useModal } from '../hooks/useModal';
-import { Calendar, CreditCard, User, FileText, LogOut, Ship, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, CreditCard, User, FileText, LogOut, Ship, Clock, CheckCircle, Search } from 'lucide-react';
 import { handleLogout } from '../utils/handleLogout';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -40,6 +40,8 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
   const [newDocType, setNewDocType] = useState<string>('Pièce d\'identité');
   const [newDocFile, setNewDocFile] = useState<File | null>(null);
   const [bookingsPage, setBookingsPage] = useState(1);
+  const [bookingSearch, setBookingSearch] = useState('');
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<string>('all');
   const RENTER_PAGE_SIZE = 10;
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,7 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
         ]);
         if (!mounted) return;
         setProfile(profileResp || null);
-        setBookings(bks || []);
+        setBookings(Array.isArray(bks) ? bks : []);
         // prefer API documents from renterDashboardService, otherwise fall back to userDocumentService
         if (docs && docs.length > 0) {
           setDocuments(docs);
@@ -113,6 +115,13 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const completedBookings = bookings.filter(b => b.status === 'completed');
+
+  const filteredBookings = bookings.filter(b => {
+    if (bookingStatusFilter !== 'all' && b.status?.toLowerCase() !== bookingStatusFilter) return false;
+    if (!bookingSearch) return true;
+    const s = bookingSearch.toLowerCase();
+    return String(b.boatName).toLowerCase().includes(s) || String(b.id).toLowerCase().includes(s) || String(b.renterName || '').toLowerCase().includes(s);
+  });
   const { showAlert, showConfirm } = useModal();
 
   return (
@@ -160,9 +169,21 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
 
                 {/* Bookings List */}
                 <Card className="p-6">
-                  <h3 className="text-gray-900 mb-6">Mes réservations</h3>
-                  <div className="space-y-4 mt-2">
-                    {bookings.slice((bookingsPage - 1) * RENTER_PAGE_SIZE, bookingsPage * RENTER_PAGE_SIZE).map((booking) => (
+                  <h3 className="text-gray-900 mb-4">Mes réservations</h3>
+                  <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                    <div className="w-full sm:w-72">
+                      <Input type="text" placeholder="Rechercher..." value={bookingSearch} onChange={(e) => { setBookingSearch(e.target.value); setBookingsPage(1); }} icon={<Search size={18} />} />
+                    </div>
+                    <select value={bookingStatusFilter} onChange={(e) => { setBookingStatusFilter(e.target.value); setBookingsPage(1); }} className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500">
+                      <option value="all">Tous les statuts</option>
+                      <option value="pending">En attente</option>
+                      <option value="confirmed">Confirmées</option>
+                      <option value="completed">Terminées</option>
+                      <option value="cancelled">Annulées</option>
+                    </select>
+                  </div>
+                  <div className="space-y-4">
+                    {filteredBookings.slice((bookingsPage - 1) * RENTER_PAGE_SIZE, bookingsPage * RENTER_PAGE_SIZE).map((booking) => (
                       <div
                         key={booking.id}
                         className="border border-gray-200 rounded-lg hover:border-ocean-300 transition-colors overflow-hidden"
@@ -314,11 +335,12 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
                       </div>
                     ))}
                   </div>
+                  {filteredBookings.length === 0 && <div className="text-center py-8 text-gray-500 text-sm">Aucune réservation trouvée</div>}
                   <TablePagination
                     currentPage={bookingsPage}
-                    totalPages={Math.ceil(bookings.length / RENTER_PAGE_SIZE)}
+                    totalPages={Math.ceil(filteredBookings.length / RENTER_PAGE_SIZE)}
                     onPageChange={setBookingsPage}
-                    totalItems={bookings.length}
+                    totalItems={filteredBookings.length}
                   />
                 </Card>
               </div>

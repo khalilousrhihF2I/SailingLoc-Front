@@ -42,6 +42,9 @@ export interface AdminActivity {
   type: string;
   message: string;
   date: string;
+  action?: string;
+  userId?: string;
+  ip?: string;
 }
 
 export interface AdminPaymentsStats {

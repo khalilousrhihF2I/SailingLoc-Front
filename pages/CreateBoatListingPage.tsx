@@ -107,7 +107,7 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
     setLoadingTypes(true);
     homeService.getTopBoatTypes().then((res: any) => {
       if (!mounted) return;
-      setTypes((res || []).map((t: any) => ({ value: t.id, label: t.name })));
+      setTypes((res || []).map((t: any) => ({ value: t.type || t.id || '', label: t.name || t.type || '' })));
     }).catch(() => {
       if (!mounted) return;
       setTypes([]);
