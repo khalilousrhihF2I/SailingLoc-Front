@@ -21,9 +21,12 @@ export class ApiRenterDashboardService implements IRenterDashboardService {
 
   async getBookings(): Promise<RenterBookingSummary[]> {
     logApiOperation('renter', 'getBookings');
-    const resp = await apiClient.get<RenterBookingSummary[]>(`${this.base}/bookings`);
+    const resp = await apiClient.get<any>(`${this.base}/bookings`);
     if (resp.error) throw new Error(resp.error);
-    return resp.data || [];
+    const data = resp.data;
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.items)) return data.items;
+    return [];
   }
 
   async getProfile(): Promise<RenterProfile> {
