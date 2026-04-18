@@ -60,7 +60,7 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
       <div className="bg-gradient-to-br from-ocean-600 to-ocean-800 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl mb-6">Comment ça marche ?</h1>
-          <p className="text-lg md:text-xl text-ocean-100 max-w-2xl mx-auto text-center">
+          <p className="text-lg md:text-xl text-ocean-100 px-4">
             Louer un bateau ou proposer le vôtre sur SailingLoc est simple, rapide et sécurisé.
           </p>
         </div>
@@ -152,7 +152,7 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
             <p className="text-ocean-100 mb-8">
               Rejoignez des milliers de passionnés de la mer sur SailingLoc.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-2">
               <Button
                 variant="ghost"
                 onClick={() => onNavigate('search')}
