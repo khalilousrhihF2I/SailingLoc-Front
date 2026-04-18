@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { handleLogout } from '../utils/handleLogout';
-import { Users, Ship, Calendar, DollarSign, AlertCircle, LogOut, X, Search, LayoutDashboard, ShieldCheck } from 'lucide-react';
+import { Users, Ship, Calendar, DollarSign, AlertCircle, LogOut, X, Search, LayoutDashboard, ShieldCheck, MessageSquare, Star, CheckCircle, XCircle } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { DashboardShell, StatCard, SectionTitle } from '../components/ui/DashboardShell';
 import AdminUsersPage from './AdminUsersPage';
@@ -10,6 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Alert } from '../components/ui/Alert';
 import { TablePagination } from '../components/ui/TablePagination';
 import { adminService } from '../services/ServiceFactory';
+import { apiClient } from '../lib/apiClient';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -17,7 +18,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'boats' | 'bookings' | 'payments' | 'admins'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'boats' | 'bookings' | 'payments' | 'admins' | 'reviews' | 'disputes'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
 
   const [stats, setStats] = useState<any | null>(null);
@@ -30,6 +31,13 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
   const [error, setError] = useState<string | null>(null);
   const [boatSearch, setBoatSearch] = useState('');
   const [showOnlyUnverified, setShowOnlyUnverified] = useState(false);
+
+  // Review moderation & disputes
+  const [pendingReviews, setPendingReviews] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<any[]>([]);
+  const [disputeFilter, setDisputeFilter] = useState<string>('all');
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [disputesPage, setDisputesPage] = useState(1);
 
   // Pagination state per tab
   const [usersPage, setUsersPage] = useState(1);
@@ -57,6 +65,15 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
         setBoats(bts);
         setBookings(bks);
         setActivity(act || []);
+
+        // Load pending reviews & disputes (non-blocking)
+        const [revRes, dispRes] = await Promise.all([
+          apiClient.get<any[]>('/review/moderation/pending').catch(() => ({ data: [] })),
+          apiClient.get<any[]>('/dispute').catch(() => ({ data: [] })),
+        ]);
+        if (!mounted) return;
+        setPendingReviews(revRes.data || []);
+        setDisputes(dispRes.data || []);
       } catch (err: any) {
         setError(err?.message || String(err));
       } finally {
@@ -83,6 +100,8 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
     { id: 'boats', label: 'Annonces', icon: <Ship size={20} />, badge: stats?.pendingVerifications || undefined, badgeVariant: 'warning' as const },
     { id: 'bookings', label: 'Réservations', icon: <Calendar size={20} /> },
     { id: 'payments', label: 'Paiements', icon: <DollarSign size={20} /> },
+    { id: 'reviews', label: 'Modération', icon: <Star size={20} />, badge: pendingReviews.length || undefined, badgeVariant: 'warning' as const },
+    { id: 'disputes', label: 'Litiges', icon: <MessageSquare size={20} />, badge: disputes.filter(d => d.status === 'open' || d.status === 'under_review').length || undefined, badgeVariant: 'danger' as const },
   ];
 
   const handleTabChange = (tabId: string) => {
@@ -479,6 +498,152 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                   </div>
                 </Card>
               </>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Reviews Moderation Tab */}
+      {activeTab === 'reviews' && (
+        <div className="space-y-6">
+          <SectionTitle title={`Avis en attente de modération (${pendingReviews.length})`} />
+          {pendingReviews.length === 0 ? (
+            <Card className="p-8 text-center text-gray-500">
+              <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
+              <p>Aucun avis en attente de modération</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {pendingReviews.slice((reviewsPage - 1) * PAGE_SIZE, reviewsPage * PAGE_SIZE).map((review: any) => (
+                <Card key={review.id} className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">{review.userName || review.userId}</span>
+                        <span className="text-yellow-500">{'★'.repeat(review.rating || 0)}{'☆'.repeat(5 - (review.rating || 0))}</span>
+                        <Badge variant="warning" size="sm">En attente</Badge>
+                      </div>
+                      <p className="text-sm text-gray-500 mb-2">Bateau : {review.boatName || review.boatId} — {review.createdAt ? new Date(review.createdAt).toLocaleDateString('fr-FR') : ''}</p>
+                      <p className="text-gray-700">{review.comment}</p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={async () => {
+                          await apiClient.patch(`/review/${review.id}/approve`, {});
+                          setPendingReviews(prev => prev.filter(r => r.id !== review.id));
+                        }}
+                      >
+                        <CheckCircle size={16} className="mr-1" /> Approuver
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          const reason = prompt('Motif du rejet :');
+                          if (!reason) return;
+                          await apiClient.patch(`/review/${review.id}/reject`, { reason });
+                          setPendingReviews(prev => prev.filter(r => r.id !== review.id));
+                        }}
+                      >
+                        <XCircle size={16} className="mr-1" /> Rejeter
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              <TablePagination
+                currentPage={reviewsPage}
+                totalPages={Math.ceil(pendingReviews.length / PAGE_SIZE)}
+                onPageChange={setReviewsPage}
+                totalItems={pendingReviews.length}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Disputes Tab */}
+      {activeTab === 'disputes' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <SectionTitle title={`Litiges (${disputes.length})`} />
+            <div className="flex gap-2">
+              {['all', 'open', 'under_review', 'resolved', 'closed'].map(f => (
+                <button
+                  key={f}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${disputeFilter === f ? 'bg-ocean-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  onClick={() => { setDisputeFilter(f); setDisputesPage(1); }}
+                >
+                  {f === 'all' ? 'Tous' : f === 'open' ? 'Ouvert' : f === 'under_review' ? 'En examen' : f === 'resolved' ? 'Résolu' : 'Fermé'}
+                </button>
+              ))}
+            </div>
+          </div>
+          {(() => {
+            const filtered = disputeFilter === 'all' ? disputes : disputes.filter(d => d.status === disputeFilter);
+            const paged = filtered.slice((disputesPage - 1) * PAGE_SIZE, disputesPage * PAGE_SIZE);
+            if (filtered.length === 0) return (
+              <Card className="p-8 text-center text-gray-500">
+                <MessageSquare size={40} className="mx-auto mb-3 text-gray-300" />
+                <p>Aucun litige{disputeFilter !== 'all' ? ` avec le statut "${disputeFilter}"` : ''}</p>
+              </Card>
+            );
+            return (
+              <div className="space-y-4">
+                {paged.map((dispute: any) => {
+                  const statusColor = dispute.status === 'open' ? 'warning' : dispute.status === 'under_review' ? 'info' : dispute.status === 'resolved' ? 'success' : 'default';
+                  const statusLabel = dispute.status === 'open' ? 'Ouvert' : dispute.status === 'under_review' ? 'En examen' : dispute.status === 'resolved' ? 'Résolu' : 'Fermé';
+                  return (
+                    <Card key={dispute.id} className="p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-gray-900">{dispute.subject}</span>
+                            <Badge variant={statusColor as any} size="sm">{statusLabel}</Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 mb-2">
+                            Réservation #{dispute.bookingId} — Signalé par {dispute.reporterName || dispute.reporterId} — {dispute.createdAt ? new Date(dispute.createdAt).toLocaleDateString('fr-FR') : ''}
+                          </p>
+                          <p className="text-gray-700 mb-2">{dispute.description}</p>
+                          {dispute.resolution && (
+                            <div className="p-3 bg-green-50 rounded-lg text-sm text-green-800">
+                              <strong>Résolution :</strong> {dispute.resolution}
+                            </div>
+                          )}
+                          {dispute.adminNote && (
+                            <p className="text-sm text-gray-500 mt-1 italic">Note admin : {dispute.adminNote}</p>
+                          )}
+                        </div>
+                        {(dispute.status === 'open' || dispute.status === 'under_review') && (
+                          <div className="shrink-0">
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              onClick={async () => {
+                                const resolution = prompt('Résolution du litige :');
+                                if (!resolution) return;
+                                const adminNote = prompt('Note admin (facultatif) :') || '';
+                                await apiClient.patch(`/dispute/${dispute.id}/resolve`, { resolution, adminNote });
+                                setDisputes(prev => prev.map(d => d.id === dispute.id ? { ...d, status: 'resolved', resolution, adminNote } : d));
+                              }}
+                            >
+                              Résoudre
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+                <TablePagination
+                  currentPage={disputesPage}
+                  totalPages={Math.ceil(filtered.length / PAGE_SIZE)}
+                  onPageChange={setDisputesPage}
+                  totalItems={filtered.length}
+                />
+              </div>
             );
           })()}
         </div>
