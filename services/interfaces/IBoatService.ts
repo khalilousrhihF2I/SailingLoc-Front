@@ -123,7 +123,7 @@ export interface CreateBoatDto {
   image: string;
   equipment: string[];
   description: string;
-  ownerId: number;
+  ownerId: string;
 }
 
 export interface UpdateBoatDto extends Partial<CreateBoatDto> {

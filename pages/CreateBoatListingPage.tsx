@@ -199,19 +199,6 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
         throw new Error('Impossible de déterminer OwnerId (GUID). Veuillez vous reconnecter.');
       }
 
-      // Try to derive numeric ownerId expected by CreateBoatDto
-      let numericOwnerId: number | undefined = undefined;
-      try {
-        const current = await authService.getCurrentUser();
-        if (current && typeof current.id === 'number') numericOwnerId = current.id;
-      } catch {}
-      if (numericOwnerId === undefined) {
-        const parsed = Number(ownerGuid);
-        if (!Number.isNaN(parsed) && Number.isFinite(parsed)) numericOwnerId = parsed;
-      }
-      if (numericOwnerId === undefined) {
-        throw new Error('Impossible de déterminer l\'identifiant numérique du propriétaire');
-      }
       const selectedDestination = location.destinationId ? allDestinations.find(d => Number(d.id) === Number(location.destinationId)) : undefined;
 
       const boatData = {
@@ -232,7 +219,7 @@ export function CreateBoatListingPage({ onNavigate, ownerId }: CreateBoatListing
         image: details.image || 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=800',
         equipment,
         images: photos && photos.length ? photos : undefined,
-        ownerId: numericOwnerId
+        ownerId: ownerGuid
       };
 
       await boatService.createBoat(boatData);

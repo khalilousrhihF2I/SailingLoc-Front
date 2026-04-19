@@ -541,7 +541,7 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
                                       </div>
                                     </td>
                                     <td className="py-3 px-4 text-sm text-gray-600">{boat.location}</td>
-                                    <td className="py-3 px-4 text-sm text-ocean-600 font-medium">{boat.price ?? 0}\u20AC/jour</td>
+                                    <td className="py-3 px-4 text-sm text-ocean-600 font-medium">{boat.price ?? 0}€/jour</td>
                                     <td className="py-3 px-4 text-center">
                                       {boat.isVerified === false ? <Badge variant="warning" size="sm">Non v\u00E9rifi\u00E9</Badge>
                                         : <Badge variant={boat.isActive ? 'success' : 'default'} size="sm">{boat.isActive ? 'Actif' : 'Inactif'}</Badge>}

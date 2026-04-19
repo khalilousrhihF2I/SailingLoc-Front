@@ -332,15 +332,6 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
         throw new Error('Impossible de déterminer OwnerId (GUID). Veuillez vous reconnecter.');
       }
 
-      // Attempt to resolve numeric ownerId for UpdateBoatDto
-      let numericOwnerId: number | undefined = undefined;
-      try {
-        const current = await authService.getCurrentUser();
-        if (current && typeof current.id === 'number') numericOwnerId = current.id;
-      } catch {}
-      const tryParsed = Number(ownerGuid);
-      if (numericOwnerId === undefined && !Number.isNaN(tryParsed) && Number.isFinite(tryParsed)) numericOwnerId = tryParsed;
-
       const updatedBoatData = {
         id: boatId,
         name: basicInfo.name,
@@ -360,7 +351,7 @@ export function EditBoatListingPage({ onNavigate, boatId, pageData }: EditBoatLi
         image: details.image || 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=800',
         equipment,
         images: photos && photos.length ? photos : undefined,
-        ownerId: numericOwnerId ?? (() => { throw new Error('Impossible de déterminer l\'identifiant numérique du propriétaire'); })()
+        ownerId: ownerGuid
       };
 
       await boatService.updateBoat(updatedBoatData);

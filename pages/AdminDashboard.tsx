@@ -174,7 +174,7 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
     return 'default' as const;
   };
   const formatDateFR=(d:string|undefined)=>{
-    if(!d) return '\u2014';
+    if(!d) return '—';
     try{return new Date(d).toLocaleDateString('fr-FR');}catch{return d;}
   };
   const friendlyAction=(action:string)=>ACTION_LABELS[action]||action;
@@ -218,7 +218,7 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
             <StatCard label="Utilisateurs" value={stats?.totalUsers??0} icon={<Users className="text-ocean-600" size={22}/>} iconBg="bg-ocean-100"/>
             <StatCard label="Bateaux" value={stats?.totalBoats??0} icon={<Ship className="text-turquoise-600" size={22}/>} iconBg="bg-turquoise-100"/>
             <StatCard label="Reservations" value={stats?.totalBookings??0} icon={<Calendar className="text-green-600" size={22}/>} iconBg="bg-green-100"/>
-            <StatCard label="Revenus" value={`${stats?.totalRevenue??0}\u20AC`} icon={<DollarSign className="text-orange-600" size={22}/>} iconBg="bg-orange-100"/>
+            <StatCard label="Revenus" value={`${stats?.totalRevenue??0}€`} icon={<DollarSign className="text-orange-600" size={22}/>} iconBg="bg-orange-100"/>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <Card className="p-5 border-orange-200 bg-orange-50/50 cursor-pointer hover:shadow-md transition-shadow" onClick={()=>{setBoatStatusFilter('unverified');setActiveTab('boats');}}>
@@ -436,7 +436,7 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                       <div className="text-xs text-gray-500">{booking.renterName}</div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600">{formatDateFR(booking.startDate)} &rarr; {formatDateFR(booking.endDate)}</td>
-                    <td className="py-3 px-4 text-sm font-semibold text-gray-900">{booking.totalPrice}\u20AC</td>
+                    <td className="py-3 px-4 text-sm font-semibold text-gray-900">{booking.totalPrice}€</td>
                     <td className="py-3 px-4"><Badge variant={statusVariant(booking.status)} size="sm">{translateStatus(booking.status)}</Badge></td>
                   </tr>
                 ))}
@@ -463,10 +463,10 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
             });
             return (<>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="p-5 border-green-100 bg-green-50/30"><div className="text-sm text-green-700 mb-1">Total encaisse</div><div className="text-2xl font-semibold text-green-900">{totalPaid.toLocaleString('fr-FR')}\u20AC</div><div className="text-xs text-green-600 mt-1">{paidBookings.length} reservations</div></Card>
-                <Card className="p-5 border-orange-100 bg-orange-50/30"><div className="text-sm text-orange-700 mb-1">En attente</div><div className="text-2xl font-semibold text-orange-900">{totalPending.toLocaleString('fr-FR')}\u20AC</div><div className="text-xs text-orange-600 mt-1">{pendingBookings.length} reservations</div></Card>
-                <Card className="p-5 border-ocean-100 bg-ocean-50/30"><div className="text-sm text-ocean-700 mb-1">Commission SailingLoc (10%)</div><div className="text-2xl font-semibold text-ocean-900">{commission.toLocaleString('fr-FR')}\u20AC</div></Card>
-                <Card className="p-5 border-gray-100 bg-gray-50/30"><div className="text-sm text-gray-700 mb-1">Reverse aux proprietaires</div><div className="text-2xl font-semibold text-gray-900">{(totalPaid-commission).toLocaleString('fr-FR')}\u20AC</div></Card>
+                <Card className="p-5 border-green-100 bg-green-50/30"><div className="text-sm text-green-700 mb-1">Total encaisse</div><div className="text-2xl font-semibold text-green-900">{totalPaid.toLocaleString('fr-FR')}€</div><div className="text-xs text-green-600 mt-1">{paidBookings.length} reservations</div></Card>
+                <Card className="p-5 border-orange-100 bg-orange-50/30"><div className="text-sm text-orange-700 mb-1">En attente</div><div className="text-2xl font-semibold text-orange-900">{totalPending.toLocaleString('fr-FR')}€</div><div className="text-xs text-orange-600 mt-1">{pendingBookings.length} reservations</div></Card>
+                <Card className="p-5 border-ocean-100 bg-ocean-50/30"><div className="text-sm text-ocean-700 mb-1">Commission SailingLoc (10%)</div><div className="text-2xl font-semibold text-ocean-900">{commission.toLocaleString('fr-FR')}€</div></Card>
+                <Card className="p-5 border-gray-100 bg-gray-50/30"><div className="text-sm text-gray-700 mb-1">Reverse aux proprietaires</div><div className="text-2xl font-semibold text-gray-900">{(totalPaid-commission).toLocaleString('fr-FR')}€</div></Card>
               </div>
               <Card className="p-6">
                 <SectionTitle title="Historique des paiements"/>
@@ -493,8 +493,8 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                               <div className="text-xs text-gray-500">{booking.renterName}</div>
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-600">{formatDateFR(booking.startDate)} &rarr; {formatDateFR(booking.endDate)}</td>
-                            <td className="py-3 px-4 text-sm font-semibold text-gray-900">{amount}\u20AC</td>
-                            <td className="py-3 px-4 text-sm text-ocean-700">{comm}\u20AC</td>
+                            <td className="py-3 px-4 text-sm font-semibold text-gray-900">{amount}€</td>
+                            <td className="py-3 px-4 text-sm text-ocean-700">{comm}€</td>
                             <td className="py-3 px-4"><Badge variant={payVariant} size="sm">{payStatus}</Badge></td>
                           </tr>
                         );
@@ -535,7 +535,7 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                           <span className="text-yellow-500">{'\u2605'.repeat(review.rating||0)}{'\u2606'.repeat(5-(review.rating||0))}</span>
                           <Badge variant={modVariant} size="sm">{modLabel}</Badge>
                         </div>
-                        <p className="text-sm text-gray-500 mb-2">Bateau : {review.boatName||review.boatId} \u2014 {review.createdAt?new Date(review.createdAt).toLocaleDateString('fr-FR'):''}</p>
+                        <p className="text-sm text-gray-500 mb-2">Bateau : {review.boatName||review.boatId} — {review.createdAt?new Date(review.createdAt).toLocaleDateString('fr-FR'):''}</p>
                         <p className="text-gray-700">{review.comment}</p>
                         {review.moderationNote&&<p className="text-sm text-gray-500 mt-1 italic">Note : {review.moderationNote}</p>}
                       </div>
@@ -585,7 +585,7 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1"><span className="font-semibold text-gray-900">{dispute.subject}</span><Badge variant={statusColor as any} size="sm">{statusLabel}</Badge></div>
-                          <p className="text-sm text-gray-500 mb-2">Reservation #{dispute.bookingId} \u2014 Signale par {dispute.reporterName||dispute.reporterId} \u2014 {dispute.createdAt?new Date(dispute.createdAt).toLocaleDateString('fr-FR'):''}</p>
+                          <p className="text-sm text-gray-500 mb-2">Reservation #{dispute.bookingId} — Signale par {dispute.reporterName||dispute.reporterId} — {dispute.createdAt?new Date(dispute.createdAt).toLocaleDateString('fr-FR'):''}</p>
                           <p className="text-gray-700 mb-2">{dispute.description}</p>
                           {dispute.resolution&&<div className="p-3 bg-green-50 rounded-lg text-sm text-green-800"><strong>Resolution :</strong> {dispute.resolution}</div>}
                           {dispute.adminNote&&<p className="text-sm text-gray-500 mt-1 italic">Note admin : {dispute.adminNote}</p>}
@@ -646,9 +646,9 @@ export function AdminDashboard({ onLogout, onNavigate }: AdminDashboardProps) {
                         <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                           <td className="py-3 px-4 text-sm text-gray-500 whitespace-nowrap">{log.timestamp?new Date(log.timestamp).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):''}</td>
                           <td className="py-3 px-4"><span className={`text-xs font-medium px-2.5 py-1 rounded-full ${tagColor}`}>{friendlyAction(actionTag)}</span></td>
-                          <td className="py-3 px-4 text-sm text-gray-600 font-mono">{log.userId?String(log.userId).substring(0,8)+'...':'\u2014'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-700 max-w-xs truncate">{log.details||'\u2014'}</td>
-                          <td className="py-3 px-4 text-sm text-gray-400 font-mono">{log.ip||'\u2014'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600 font-mono">{log.userId?String(log.userId).substring(0,8)+'...':'—'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 max-w-xs truncate">{log.details||'—'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-400 font-mono">{log.ip||'—'}</td>
                         </tr>
                       );
                     })}
