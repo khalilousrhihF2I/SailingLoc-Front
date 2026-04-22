@@ -267,7 +267,7 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
                                   variant="ghost"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    showAlert('Fonctionnalité de contact en développement', 'Contact');
+                                    onNavigate('booking-detail', { bookingId: booking.id, scrollTo: 'messages' });
                                   }}
                                 >
                                   Contacter le propriétaire

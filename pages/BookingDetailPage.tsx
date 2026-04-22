@@ -62,6 +62,20 @@ export function BookingDetailPage({ bookingId, onNavigate }: BookingDetailPagePr
         return () => { mounted = false; };
     }, [bookingId]);
 
+    // Scroll to messages section if requested via query string (?scrollTo=messages)
+    useEffect(() => {
+        if (loading) return;
+        try {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('scrollTo') === 'messages') {
+                const el = document.getElementById('messages');
+                if (el) {
+                    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                }
+            }
+        } catch { /* ignore */ }
+    }, [loading, messages.length]);
+
     const formatDate = (iso?: string) => {
         if (!iso) return '';
         try { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch { return iso; }
@@ -204,6 +218,7 @@ export function BookingDetailPage({ bookingId, onNavigate }: BookingDetailPagePr
                 </Card>
 
                 {/* Messages Section */}
+                <div id="messages">
                 <Card className="p-6">
                     <h3 className="text-gray-900 font-semibold mb-4">Messages</h3>
 
@@ -239,6 +254,7 @@ export function BookingDetailPage({ bookingId, onNavigate }: BookingDetailPagePr
                         </Button>
                     </div>
                 </Card>
+                </div>
             </div>
         </div>
     );

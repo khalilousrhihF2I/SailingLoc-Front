@@ -85,34 +85,52 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // Per-step validation
-  const validateStep = (step: number): string[] => {
-    const errors: string[] = [];
+  // Per-step validation - returns map of field -> error message (empty means no error)
+  const getFieldErrors = (step: number): Record<string, string> => {
+    const errs: Record<string, string> = {};
     if (step === 2) {
-      if (!formData.firstName.trim()) errors.push('Le prénom est requis');
-      if (!formData.lastName.trim()) errors.push('Le nom est requis');
-      if (!formData.email.trim()) errors.push('L\'email est requis');
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.push('Adresse email invalide');
-      if (!formData.phoneNumber.trim()) errors.push('Le numéro de téléphone est requis');
+      if (!formData.firstName.trim()) errs.firstName = 'Le prénom est requis';
+      if (!formData.lastName.trim()) errs.lastName = 'Le nom est requis';
+      if (!formData.email.trim()) errs.email = 'L\'email est requis';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Adresse email invalide';
+      if (!formData.phoneNumber.trim()) errs.phoneNumber = 'Le numéro de téléphone est requis';
     }
     if (step === 3) {
-      if (!formData.address.street.trim()) errors.push('La rue est requise');
-      if (!formData.address.city.trim()) errors.push('La ville est requise');
-      if (!formData.address.postalCode.trim()) errors.push('Le code postal est requis');
-      if (!formData.address.country.trim()) errors.push('Le pays est requis');
+      if (!formData.address.street.trim()) errs.street = 'La rue est requise';
+      if (!formData.address.city.trim()) errs.city = 'La ville est requise';
+      if (!formData.address.postalCode.trim()) errs.postalCode = 'Le code postal est requis';
+      if (!formData.address.country.trim()) errs.country = 'Le pays est requis';
     }
     if (step === 4) {
-      if (!formData.password) errors.push('Le mot de passe est requis');
-      else if (formData.password.length < 8) errors.push('Le mot de passe doit contenir au moins 8 caractères');
-      if (formData.password !== formData.confirmPassword) errors.push('Les mots de passe ne correspondent pas');
-      if (!acceptedTerms) errors.push('Vous devez accepter les conditions générales');
+      if (!formData.password) errs.password = 'Le mot de passe est requis';
+      else if (formData.password.length < 8) errs.password = 'Le mot de passe doit contenir au moins 8 caractères';
+      if (!formData.confirmPassword) errs.confirmPassword = 'Veuillez confirmer le mot de passe';
+      else if (formData.password !== formData.confirmPassword) errs.confirmPassword = 'Les mots de passe ne correspondent pas';
+      if (!acceptedTerms) errs.terms = 'Vous devez accepter les conditions générales';
     }
-    return errors;
+    return errs;
+  };
+
+  const validateStep = (step: number): string[] => Object.values(getFieldErrors(step));
+
+  const currentStepErrors = getFieldErrors(currentStep);
+  const isStepValid = Object.keys(currentStepErrors).length === 0;
+  const showErr = (key: string) => (touched[key] ? currentStepErrors[key] : '') || '';
+
+  const markStepTouched = (step: number) => {
+    const fields = Object.keys(getFieldErrors(step));
+    if (fields.length === 0) return;
+    setTouched(prev => {
+      const next = { ...prev };
+      fields.forEach(f => { next[f] = true; });
+      return next;
+    });
   };
 
   const nextStep = () => {
     const errs = validateStep(currentStep);
     if (errs.length > 0) {
+      markStepTouched(currentStep);
       setError(errs[0]);
       return;
     }
@@ -129,6 +147,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
     e.preventDefault();
     const errs = validateStep(4);
     if (errs.length > 0) {
+      markStepTouched(4);
       setError(errs[0]);
       return;
     }
@@ -313,9 +332,11 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                     placeholder="Jean"
                     value={formData.firstName}
                     onChange={(e) => updateField('firstName', e.target.value)}
+                    onBlur={() => setTouched(t => ({ ...t, firstName: true }))}
                     icon={<User size={20} />}
                     autoComplete="given-name"
                     required
+                    error={showErr('firstName')}
                   />
                   <Input
                     type="text"
@@ -323,9 +344,11 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                     placeholder="Dupont"
                     value={formData.lastName}
                     onChange={(e) => updateField('lastName', e.target.value)}
+                    onBlur={() => setTouched(t => ({ ...t, lastName: true }))}
                     icon={<User size={20} />}
                     autoComplete="family-name"
                     required
+                    error={showErr('lastName')}
                   />
                 </div>
 
@@ -338,7 +361,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                   icon={<Mail size={20} />}
                   autoComplete="email"
                   required
-                  error={touched.email && formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'Adresse email invalide' : ''}
+                  error={showErr('email')}
                   onBlur={() => setTouched(t => ({ ...t, email: true }))}
                 />
 
@@ -348,9 +371,11 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                   placeholder="+33 6 12 34 56 78"
                   value={formData.phoneNumber}
                   onChange={(e) => updateField('phoneNumber', e.target.value)}
+                  onBlur={() => setTouched(t => ({ ...t, phoneNumber: true }))}
                   icon={<Phone size={20} />}
                   autoComplete="tel"
                   required
+                  error={showErr('phoneNumber')}
                 />
 
                 <Input
@@ -366,7 +391,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 <Button variant="ghost" onClick={prevStep}>
                   <ChevronLeft size={18} /> Retour
                 </Button>
-                <Button variant="primary" onClick={nextStep}>
+                <Button variant="primary" onClick={nextStep} disabled={!isStepValid}>
                   Continuer <ChevronRight size={18} />
                 </Button>
               </div>
@@ -386,9 +411,11 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                   placeholder="12 Rue de la Mer"
                   value={formData.address.street}
                   onChange={(e) => updateAddress('street', e.target.value)}
+                  onBlur={() => setTouched(t => ({ ...t, street: true }))}
                   icon={<MapPin size={20} />}
                   autoComplete="street-address"
                   required
+                  error={showErr('street')}
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -398,8 +425,10 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                     placeholder="La Rochelle"
                     value={formData.address.city}
                     onChange={(e) => updateAddress('city', e.target.value)}
+                    onBlur={() => setTouched(t => ({ ...t, city: true }))}
                     autoComplete="address-level2"
                     required
+                    error={showErr('city')}
                   />
                   <Input
                     type="text"
@@ -418,8 +447,10 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                     placeholder="17000"
                     value={formData.address.postalCode}
                     onChange={(e) => updateAddress('postalCode', e.target.value)}
+                    onBlur={() => setTouched(t => ({ ...t, postalCode: true }))}
                     autoComplete="postal-code"
                     required
+                    error={showErr('postalCode')}
                   />
                   <Input
                     type="text"
@@ -427,8 +458,10 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                     placeholder="France"
                     value={formData.address.country}
                     onChange={(e) => updateAddress('country', e.target.value)}
+                    onBlur={() => setTouched(t => ({ ...t, country: true }))}
                     autoComplete="country-name"
                     required
+                    error={showErr('country')}
                   />
                 </div>
               </div>
@@ -437,7 +470,7 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                 <Button variant="ghost" onClick={prevStep}>
                   <ChevronLeft size={18} /> Retour
                 </Button>
-                <Button variant="primary" onClick={nextStep}>
+                <Button variant="primary" onClick={nextStep} disabled={!isStepValid}>
                   Continuer <ChevronRight size={18} />
                 </Button>
               </div>
@@ -457,10 +490,11 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => updateField('password', e.target.value)}
+                  onBlur={() => setTouched(t => ({ ...t, password: true }))}
                   icon={<Lock size={20} />}
                   autoComplete="new-password"
                   required
-                  error={formData.password && formData.password.length < 8 ? 'Le mot de passe doit contenir au moins 8 caractères' : ''}
+                  error={showErr('password')}
                 />
 
                 {/* Password strength indicator */}
@@ -490,10 +524,11 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={(e) => updateField('confirmPassword', e.target.value)}
+                  onBlur={() => setTouched(t => ({ ...t, confirmPassword: true }))}
                   icon={<Lock size={20} />}
                   autoComplete="new-password"
                   required
-                  error={formData.confirmPassword && formData.confirmPassword !== formData.password ? 'Les mots de passe ne correspondent pas' : ''}
+                  error={showErr('confirmPassword')}
                 />
 
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
@@ -501,7 +536,10 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                     type="checkbox"
                     id="terms"
                     checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    onChange={(e) => {
+                      setAcceptedTerms(e.target.checked);
+                      setTouched(t => ({ ...t, terms: true }));
+                    }}
                     className="mt-0.5 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500"
                   />
                   <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
@@ -523,13 +561,16 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
                     </button>
                   </label>
                 </div>
+                {showErr('terms') && (
+                  <p className="text-sm text-red-600 mt-1">{showErr('terms')}</p>
+                )}
               </div>
 
               <div className="mt-8 flex justify-between">
                 <Button variant="ghost" type="button" onClick={prevStep}>
                   <ChevronLeft size={18} /> Retour
                 </Button>
-                <Button type="submit" variant="primary" disabled={loading}>
+                <Button type="submit" variant="primary" disabled={loading || !isStepValid}>
                   {loading ? 'Création en cours...' : 'Créer mon compte'}
                 </Button>
               </div>
