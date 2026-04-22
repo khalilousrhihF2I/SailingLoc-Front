@@ -8,7 +8,7 @@ import { Alert } from '../components/ui/Alert';
 import { Input } from '../components/ui/Input';
 import { DashboardShell, StatCard } from '../components/ui/DashboardShell';
 import { TablePagination } from '../components/ui/TablePagination';
-import { ownerDashboardService, authService, userService, bookingService, boatService, userDocumentService } from '../services/ServiceFactory';
+import { ownerDashboardService, renterDashboardService, authService, userService, bookingService, boatService, userDocumentService } from '../services/ServiceFactory';
 import { useModal } from '../hooks/useModal';
 import { Page } from '../types/navigation';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -26,11 +26,16 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
   const [selectedBoatForDoc, setSelectedBoatForDoc] = useState<number | null>(null);
   const [newDocType, setNewDocType] = useState<string>('Permis bateau');
   const [newDocFile, setNewDocFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'boats' | 'bookings' | 'revenue' | 'calendar' | 'profile' | 'documents'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'boats' | 'bookings' | 'my-bookings' | 'revenue' | 'calendar' | 'profile' | 'documents'>('overview');
   const [selectedBoatForCalendar, setSelectedBoatForCalendar] = useState<number>(1);
 
   const [boats, setBoats] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  // Bookings where the current owner acts as renter (booked another boat — or even their own)
+  const [myBookings, setMyBookings] = useState<any[]>([]);
+  const [myBookingsPage, setMyBookingsPage] = useState(1);
+  const [myBookingsLoading, setMyBookingsLoading] = useState(false);
+  const [myBookingsError, setMyBookingsError] = useState<string | null>(null);
   const [stats, setStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +76,19 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
       }
     }
     load();
+    // load owner's own bookings (as renter) — safe no-op if user has no renter bookings
+    (async () => {
+      setMyBookingsLoading(true);
+      setMyBookingsError(null);
+      try {
+        const mine = await renterDashboardService.getBookings();
+        if (mounted) setMyBookings(Array.isArray(mine) ? mine : []);
+      } catch (e: any) {
+        if (mounted) setMyBookingsError(e?.message || String(e));
+      } finally {
+        if (mounted) setMyBookingsLoading(false);
+      }
+    })();
       // load owner documents
       (async () => {
         try {
@@ -377,7 +395,8 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
       navItems={[
         { id: 'overview', label: 'Tableau de bord', icon: <TrendingUp size={20} /> },
         { id: 'boats', label: 'Mes bateaux', icon: <Ship size={20} /> },
-        { id: 'bookings', label: 'Réservations', icon: <Calendar size={20} />, badge: pendingBookings.length > 0 ? pendingBookings.length : undefined },
+        { id: 'bookings', label: 'Réservations reçues', icon: <Calendar size={20} />, badge: pendingBookings.length > 0 ? pendingBookings.length : undefined },
+        { id: 'my-bookings', label: 'Mes réservations', icon: <Calendar size={20} />, badge: myBookings.length > 0 ? myBookings.length : undefined },
         { id: 'documents', label: 'Documents', icon: <FileText size={20} /> },
         { id: 'revenue', label: 'Revenus', icon: <TrendingUp size={20} /> },
         { id: 'calendar', label: 'Disponibilités', icon: <Calendar size={20} /> },
@@ -894,6 +913,145 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
                   onPageChange={setBookingsPage}
                   totalItems={ownerBookings.length}
                 />
+              </Card>
+            )}
+
+            {activeTab === 'my-bookings' && (
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-gray-900 font-semibold">Mes réservations</h3>
+                    <p className="text-sm text-gray-500">Réservations que vous avez effectuées en tant que locataire.</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      setMyBookingsLoading(true);
+                      setMyBookingsError(null);
+                      try {
+                        const mine = await renterDashboardService.getBookings();
+                        setMyBookings(Array.isArray(mine) ? mine : []);
+                      } catch (e: any) {
+                        setMyBookingsError(e?.message || String(e));
+                      } finally {
+                        setMyBookingsLoading(false);
+                      }
+                    }}
+                  >
+                    Rafraîchir
+                  </Button>
+                </div>
+
+                {myBookingsLoading && (
+                  <div className="text-sm text-gray-500 py-6 text-center">Chargement de vos réservations...</div>
+                )}
+                {myBookingsError && (
+                  <Alert type="error">Erreur : {myBookingsError}</Alert>
+                )}
+                {!myBookingsLoading && !myBookingsError && myBookings.length === 0 && (
+                  <div className="text-sm text-gray-500 py-10 text-center">
+                    Vous n'avez encore effectué aucune réservation.
+                    <div className="mt-3">
+                      <Button size="sm" variant="primary" onClick={() => onNavigate('search')}>
+                        Parcourir les bateaux
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {!myBookingsLoading && myBookings.length > 0 && (
+                  <>
+                    <div className="space-y-4">
+                      {myBookings
+                        .slice((myBookingsPage - 1) * OWNER_PAGE_SIZE, myBookingsPage * OWNER_PAGE_SIZE)
+                        .map((b: any) => {
+                          const status = b.status ?? b.Status ?? '';
+                          const startDate = b.startDate ?? b.StartDate;
+                          const endDate = b.endDate ?? b.EndDate;
+                          const formatLocal = (d: any) => {
+                            if (!d) return '';
+                            try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return String(d); }
+                          };
+                          return (
+                            <div
+                              key={b.id}
+                              className="border border-gray-200 rounded-lg hover:border-ocean-300 transition-colors overflow-hidden"
+                            >
+                              <div className="flex flex-col md:flex-row gap-4 p-4">
+                                <div className="w-full md:w-32 h-24 rounded-lg overflow-hidden shrink-0">
+                                  <ImageWithFallback
+                                    src={b.boatImage || typeImageMap[b.boatType] || '/images/voiliers.png'}
+                                    alt={b.boatName || 'Bateau'}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                      <h4 className="text-gray-900 mb-1">{b.boatName}</h4>
+                                      <div className="text-sm text-gray-600">
+                                        {formatLocal(startDate)} → {formatLocal(endDate)}
+                                      </div>
+                                    </div>
+                                    <Badge
+                                      variant={
+                                        status === 'confirmed'
+                                          ? 'success'
+                                          : status === 'pending'
+                                          ? 'warning'
+                                          : 'default'
+                                      }
+                                    >
+                                      {status === 'confirmed' && 'Confirmée'}
+                                      {status === 'pending' && 'En attente'}
+                                      {status === 'cancelled' && 'Annulée'}
+                                      {status === 'completed' && 'Terminée'}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-sm text-gray-600">Réf: {b.id}</div>
+                                    <div className="text-ocean-600">{b.totalPrice}€</div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="px-4 pb-4 pt-2 bg-gray-50 border-t border-gray-200">
+                                <div className="flex flex-wrap gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => onNavigate('booking-detail', { bookingId: b.id })}
+                                  >
+                                    Voir les détails
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => onNavigate('boat-detail', { boatId: b.boatId })}
+                                  >
+                                    Voir le bateau
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => onNavigate('booking-detail', { bookingId: b.id, scrollTo: 'messages' })}
+                                  >
+                                    Contacter le propriétaire
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <TablePagination
+                      currentPage={myBookingsPage}
+                      totalPages={Math.ceil(myBookings.length / OWNER_PAGE_SIZE)}
+                      onPageChange={setMyBookingsPage}
+                      totalItems={myBookings.length}
+                    />
+                  </>
+                )}
               </Card>
             )}
 

@@ -25,7 +25,7 @@ import { DestinationsPage } from './pages/DestinationsPage';
 import { BookingConfirmationPage } from './pages/BookingConfirmationPage';
 import { BookingDetailPage } from './pages/BookingDetailPage';
 import { OwnerBookingDetailPage } from './pages/OwnerBookingDetailPage';
-import { authService } from './services/ServiceFactory';
+import { authService, bookingService } from './services/ServiceFactory';
 import { CreateBoatListingPage } from './pages/CreateBoatListingPage';
 import { EditBoatListingPage } from './pages/EditBoatListingPage';
 import { AboutPage } from './pages/AboutPage';
@@ -429,26 +429,45 @@ export default function App() {
 }
 
 // ── Booking detail router (owner vs renter view) ──
+// Chooses which detail page to render based on the current user's *actual* relation
+// to the booking, not just their primary role. This allows an Owner who has rented
+// another boat (or even their own) to see the renter view for that specific booking.
 function BookingDetailRouter({ bookingId, onNavigate }: { bookingId: string; onNavigate: (p: any, d?: any) => void }) {
-  const [role, setRole] = useState<string | null>(null);
+  const [view, setView] = useState<'owner' | 'renter' | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const user = await authService.getCurrentUser();
+        const [user, booking] = await Promise.all([
+          authService.getCurrentUser(),
+          bookingService.getBookingById(bookingId).catch(() => null),
+        ]);
         if (!mounted) return;
-        if (user) {
-          setRole(getUserRole(user));
-        }
-      } catch { }
-      if (mounted) setLoading(false);
+        const userId = user ? String((user as any).id ?? '') : '';
+        const renterId = booking ? String((booking as any).renterId ?? (booking as any).RenterId ?? '') : '';
+        const ownerId = booking ? String((booking as any).ownerId ?? (booking as any).OwnerId ?? '') : '';
+        const role = user ? getUserRole(user) : null;
+
+        // 1. If this user is the renter of the booking, show renter view
+        //    (handles an Owner who booked another owner's — or their own — boat).
+        // 2. Otherwise, if this user is the owner of the booking, show owner view.
+        // 3. Fallback to the user's primary role.
+        if (userId && renterId && userId === renterId) setView('renter');
+        else if (userId && ownerId && userId === ownerId) setView('owner');
+        else if (role === 'owner') setView('owner');
+        else setView('renter');
+      } catch {
+        if (mounted) setView('renter');
+      } finally {
+        if (mounted) setLoading(false);
+      }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [bookingId]);
 
   if (loading) return <div className="p-6" role="status" aria-live="polite">Chargement...</div>;
-  if (role === 'owner') return <OwnerBookingDetailPage bookingId={bookingId} onNavigate={onNavigate} />;
+  if (view === 'owner') return <OwnerBookingDetailPage bookingId={bookingId} onNavigate={onNavigate} />;
   return <BookingDetailPage bookingId={bookingId} onNavigate={onNavigate} />;
 }
