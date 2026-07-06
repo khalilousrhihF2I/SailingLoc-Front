@@ -20,9 +20,11 @@ const appTree = (
   </React.StrictMode>
 );
 
-// Hydrate if pre-rendered content exists, otherwise create fresh root
-if (rootElement.innerHTML.trim().length > 0) {
-  ReactDOM.hydrateRoot(rootElement, appTree);
-} else {
-  ReactDOM.createRoot(rootElement).render(appTree);
-}
+// The pre-rendered HTML (scripts/prerender.mjs) is a build-time SEO snapshot,
+// not a true server render. Its markup depends on runtime state (localStorage,
+// auth, welcome modal, cookie banner) that differs on the client, so hydrating
+// it causes React hydration mismatches (errors #418 / #423) and leaves the UI
+// stuck. We therefore always do a fresh client render: crawlers still receive
+// the pre-rendered HTML, while browsers render cleanly with no mismatch.
+rootElement.innerHTML = '';
+ReactDOM.createRoot(rootElement).render(appTree);
