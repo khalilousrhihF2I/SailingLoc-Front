@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './dialog';
 import { Button } from './Button';
 
@@ -36,6 +36,25 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [single, setSingle] = useState(false);
 
   const hide = () => setOpen(false);
+
+  // Radix Dialog can leave `pointer-events: none` and the scroll lock
+  // (`data-scroll-locked` + `overflow: hidden`) stuck on <body> after the
+  // dialog closes (known Radix / react-remove-scroll bug). That makes the
+  // ENTIRE page unclickable and un-scrollable. Whenever the modal is closed,
+  // clear these leftover locks.
+  useEffect(() => {
+    if (open) return;
+    const clear = () => {
+      const body = document.body;
+      if (body.style.pointerEvents === 'none') body.style.pointerEvents = '';
+      if (body.hasAttribute('data-scroll-locked')) body.removeAttribute('data-scroll-locked');
+      if (body.style.overflow === 'hidden') body.style.overflow = '';
+    };
+    clear();
+    const t = setTimeout(clear, 300); // also clear after the close animation
+    return () => clearTimeout(t);
+  }, [open]);
+
 
   const showAlert = (msg: string, t?: string) => {
     setTitle(t);

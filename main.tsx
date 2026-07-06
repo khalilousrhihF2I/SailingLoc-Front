@@ -26,5 +26,16 @@ const appTree = (
 // it causes React hydration mismatches (errors #418 / #423) and leaves the UI
 // stuck. We therefore always do a fresh client render: crawlers still receive
 // the pre-rendered HTML, while browsers render cleanly with no mismatch.
+//
+// Radix UI renders dialogs/overlays into portals appended to <body> (outside
+// #root). The snapshot captured an OPEN welcome modal, leaving a dead,
+// non-interactive overlay that sits on top and blocks every click. Remove all
+// pre-rendered <body> children except the root container and scripts before
+// mounting so no orphaned overlay intercepts pointer events.
+Array.from(document.body.children).forEach((el) => {
+  if (el !== rootElement && el.tagName !== 'SCRIPT') {
+    el.remove();
+  }
+});
 rootElement.innerHTML = '';
 ReactDOM.createRoot(rootElement).render(appTree);
