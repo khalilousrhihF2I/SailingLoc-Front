@@ -8,6 +8,7 @@ import { Alert } from '../components/ui/Alert';
 import { Input } from '../components/ui/Input';
 import { DashboardShell, StatCard } from '../components/ui/DashboardShell';
 import { TablePagination } from '../components/ui/TablePagination';
+import { DocumentUploader } from '../components/ui/DocumentUploader';
 import { ownerDashboardService, renterDashboardService, authService, userService, bookingService, boatService, userDocumentService } from '../services/ServiceFactory';
 import { useModal } from '../hooks/useModal';
 import { Page } from '../types/navigation';
@@ -23,9 +24,6 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
   const { showAlert, showConfirm } = useModal();
   const [ownerDocuments, setOwnerDocuments] = useState<any[]>([]);
   const [docUploading, setDocUploading] = useState(false);
-  const [selectedBoatForDoc, setSelectedBoatForDoc] = useState<number | null>(null);
-  const [newDocType, setNewDocType] = useState<string>('Permis bateau');
-  const [newDocFile, setNewDocFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'boats' | 'bookings' | 'my-bookings' | 'revenue' | 'calendar' | 'profile' | 'documents'>('overview');
   const [selectedBoatForCalendar, setSelectedBoatForCalendar] = useState<number>(1);
 
@@ -1132,41 +1130,31 @@ export function OwnerDashboard({ onNavigate, onLogout }: OwnerDashboardProps) {
               <Card className="p-6">
                 <h3 className="text-gray-900 mb-6">Documents</h3>
                 <div className="mb-4">
-                  <div className="text-sm text-gray-600 mb-2">Ajouter un document</div>
-                  <div className="flex gap-2 items-center">
-                    <select className="px-3 py-2 border rounded" value={selectedBoatForDoc ?? ''} onChange={(e) => setSelectedBoatForDoc(e.target.value ? parseInt(e.target.value) : null)}>
-                      <option value="">-- Sélectionner un bateau --</option>
-                      {ownerBoats.map((b) => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </select>
-                    <select className="px-3 py-2 border rounded" value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
-                      <option value={"Permis bateau"}>Permis bateau</option>
-                      <option value={"Titre de propriété"}>Titre de propriété</option>
-                    </select>
-                    <input type="file" onChange={(e) => setNewDocFile(e.target.files ? e.target.files[0] : null)} />
-                    <Button disabled={docUploading || !newDocFile || !selectedBoatForDoc} onClick={async () => {
-                      if (!newDocFile || !selectedBoatForDoc) return;
+                  <DocumentUploader
+                    uploading={docUploading}
+                    boats={ownerBoats.map((b) => ({ id: b.id, name: b.name }))}
+                    docTypes={[
+                      { value: 'Permis bateau', label: 'Permis bateau' },
+                      { value: 'Titre de propriété', label: 'Titre de propriété' },
+                    ]}
+                    onUpload={async ({ file, documentType, boatId }) => {
                       setDocUploading(true);
                       try {
                         const form = new FormData();
-                        form.append('file', newDocFile, newDocFile.name);
-                        form.append('documentType', newDocType);
-                        form.append('boatId', String(selectedBoatForDoc));
+                        form.append('file', file, file.name);
+                        form.append('documentType', documentType);
+                        form.append('boatId', String(boatId));
                         await userDocumentService.uploadDocument(form);
-                        // refresh owner documents
                         const myDocs = await userDocumentService.getMyDocuments();
                         setOwnerDocuments(myDocs || []);
-                        setNewDocFile(null);
-                        setNewDocType('Permis bateau');
                         showAlert('Document ajouté', 'Documents');
                       } catch (err: any) {
                         showAlert(err?.message || String(err), 'Erreur');
                       } finally {
                         setDocUploading(false);
                       }
-                    }}>{docUploading ? 'Envoi...' : 'Ajouter'}</Button>
-                  </div>
+                    }}
+                  />
                 </div>
 
                 <div className="space-y-4">

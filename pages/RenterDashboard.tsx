@@ -9,6 +9,7 @@ import { Alert } from '../components/ui/Alert';
 import { Input } from '../components/ui/Input';
 import { DashboardShell, StatCard } from '../components/ui/DashboardShell';
 import { TablePagination } from '../components/ui/TablePagination';
+import { DocumentUploader } from '../components/ui/DocumentUploader';
 import { renterDashboardService, bookingService, userDocumentService } from '../services/ServiceFactory';
 import { Page } from '../types/navigation';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -37,8 +38,6 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
   });
   const [documents, setDocuments] = useState<any[]>([]);
   const [docUploading, setDocUploading] = useState(false);
-  const [newDocType, setNewDocType] = useState<string>('Pièce d\'identité');
-  const [newDocFile, setNewDocFile] = useState<File | null>(null);
   const [bookingsPage, setBookingsPage] = useState(1);
   const [bookingSearch, setBookingSearch] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState<string>('all');
@@ -455,30 +454,25 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
                     );
                   })}
                   <div className="pt-2">
-                    <div className="flex gap-2 items-center">
-                      <select className="px-3 py-2 border rounded" value={newDocType} onChange={(e) => setNewDocType(e.target.value)}>
-                        <option value={"Pièce d'identité"}>Pièce d'identité</option>
-                        <option value={"Permis bateau"}>Permis bateau</option>
-                      </select>
-                      <input type="file" onChange={(e) => setNewDocFile(e.target.files ? e.target.files[0] : null)} />
-                      <Button disabled={docUploading || !newDocFile} onClick={async () => {
-                        if (!newDocFile) return;
+                    <DocumentUploader
+                      uploading={docUploading}
+                      docTypes={[
+                        { value: "Pièce d'identité", label: "Pièce d'identité" },
+                        { value: 'Permis bateau', label: 'Permis bateau' },
+                      ]}
+                      onUpload={async ({ file, documentType }) => {
                         setDocUploading(true);
                         try {
                           const form = new FormData();
-                          form.append('file', newDocFile, newDocFile.name);
-                          form.append('documentType', newDocType);
-                          // call the userDocumentService API implementation
+                          form.append('file', file, file.name);
+                          form.append('documentType', documentType);
                           const uploaded = await userDocumentService.uploadDocument(form);
-                            if (uploaded) {
-                            // refresh list from the API service to ensure server-side data shown
+                          if (uploaded) {
                             const refreshed = await userDocumentService.getMyDocuments();
                             setDocuments(refreshed || []);
-                            setNewDocFile(null);
-                            setNewDocType("Pièce d'identité");
                             showAlert('Document ajouté', 'Documents');
                           } else {
-                            showAlert('Le serveur n\'a pas renvoyé le document', 'Erreur');
+                            showAlert("Le serveur n'a pas renvoyé le document", 'Erreur');
                           }
                         } catch (err: any) {
                           console.error('Upload document error', err);
@@ -486,8 +480,8 @@ export function RenterDashboard({ onNavigate, onLogout }: RenterDashboardProps) 
                         } finally {
                           setDocUploading(false);
                         }
-                      }}>{docUploading ? 'Envoi...' : 'Ajouter'}</Button>
-                    </div>
+                      }}
+                    />
                   </div>
                 </div>
               </Card>
