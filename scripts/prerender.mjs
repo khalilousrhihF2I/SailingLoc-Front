@@ -22,6 +22,7 @@ const ROUTES = [
   '/bateaux',
   '/destinations',
   '/a-propos',
+  '/comment-ca-marche',
   '/faq',
   '/contact',
   '/conditions-generales',

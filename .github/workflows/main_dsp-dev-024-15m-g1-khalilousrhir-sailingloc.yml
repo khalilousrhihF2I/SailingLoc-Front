@@ -23,10 +23,10 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Install & Build
+      - name: Install & Build (with SEO pre-rendering)
         run: |
           npm ci
-          npm run build
+          npm run build:prerender
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
